@@ -6,6 +6,7 @@ import mfrc522
 from os import uname
 from read import do_read
 import machine
+from hx711 import HX711
 
 
 #MQTT
@@ -31,6 +32,9 @@ bot.irq(trigger=machine.Pin.IRQ_FALLING, handler=handle_interrupt)
 
 
 #HX711: DATA = 32, SCK=33
+hx = HX711(32,33)
+hx.tare()
+
 while True:
     try:    	
     	print("")
@@ -38,7 +42,8 @@ while True:
     	if rfid is None:
     		rfid = '0'
         distance = sensor.distance_cm()           
-        msg = (b'ultrasonic: {0:3}, rfid: {1:3}, botao: {2:3}'.format(distance, str(rfid), apertado))
+        peso = hx.read()
+        msg = (b'ultrasonic: {0:3}, rfid: {1:3}, peso: {2:3}, botao: {3:3}'.format(distance, str(rfid), peso, apertado))
         client.publish(TOPIC, msg)  # Publish sensor data to MQTT topic
         print(msg)  
         if apertado:
