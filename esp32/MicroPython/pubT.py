@@ -8,6 +8,7 @@ from read import do_read
 import machine
 from hx711 import HX711
 import _thread
+import sys
 
 #MQTT
 SERVER = '10.3.141.1'  # MQTT Server Address (Change to the IP address of your Pi)
@@ -36,9 +37,6 @@ def handle_interrupt(pin):
     global apertado
     apertado = True
 
-#ESTADO
-pronta = '0'
-
 def read():
     sleep(2)
     hx.tare()
@@ -60,27 +58,32 @@ def read():
 
         except OSError:
             print('Failed to read sensor.')
+            continue
         sleep(4)
 
 def waiting():
     pronta = '0'
     while True:
-        sleep(10)
-        if(peso < 315 and rfid != '[0, 0, 0, 0]' and apertado == False):
-            pronta = '1'
+        try:
             sleep(10)
-            pronta = checa_estado()
-            sleep(10)
-            pronta = checa_estado()
-            sleep(10)
-            pronta = checa_estado()
-        else:
-            pronta = '0'
-        print('Pronta: ' + pronta)
-        client.publish(TOPIC_STATUS, pronta)
+            if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]' and apertado == False):
+                pronta = '1'
+                sleep(10)
+                pronta = checa_estado()
+                sleep(10)
+                pronta = checa_estado()
+                sleep(10)
+                pronta = checa_estado()
+            else:
+                pronta = '0'
+            print('Pronta: ' + pronta)
+            client.publish(TOPIC_STATUS, pronta)
+        except OSError:
+            print('Erro na espera')
+            continue
 
 def checa_estado():
-    if(peso < 315 and rfid != '[0, 0, 0, 0]' and apertado == False):
+    if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]' and apertado == False):
         return '1'
     return '0'
 
