@@ -23,21 +23,49 @@ connection = client.connect()   # Connect to MQTT broker
 sensor = HCSR04(trigger_pin=26, echo_pin=25, echo_timeout_us=10000)
 distancia = 0
 
+#BOTAO
+pronta = '0'
+apertado = '0'
+def handle_interrupt(pin):
+    global apertado
+    if apertado == '0':
+        print("Botao apertado.")
+        apertado = '1'
+
+bot = machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP)
+bot.irq(trigger=machine.Pin.IRQ_FALLING, handler=handle_interrupt)
+
+def tratamento_botao():
+    global apertado
+    try:
+        if apertado == '1':
+            global pronta
+            if(pronta == '1'):
+                pronta = '0'
+            print('Cancelamento. Pronta: ' + pronta)
+            client.publish(TOPIC_STATUS, pronta)
+            for i in range (0, 60):
+                print('Esperando... ' + str(60 - i))
+                sleep(1)
+            apertado = '0'
+    except OSError as er:
+        apertado = '0'
+        print(er.args[0])
+        print('Erro no botao')
+        if(er.args[0] == 104):
+            print('Connection error.')
+            client.connect()
+        global thread2
+        thread2 = 0
+        return
+
+
 #HX711: DATA = 32, SCK=33
 hx = HX711(32,33)
 peso = 0
 
 #RFID:
 rfid = '[0, 0, 0, 0]'
-
-#BOTAO
-apertado = False
-def handle_interrupt(pin):
-    #print("Botao apertado")
-    global apertado
-    if apertado == False:
-        apertado = True
-
 def read():
     sleep(2)
     hx.tare()
@@ -68,20 +96,15 @@ def read():
         sleep(4)
 
 def waiting():
+    global pronta
     pronta = '0'
     while True:
         try:
-            sleep(10)
-            if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]' and apertado == False):
-                pronta = '1'
-                sleep(10)
-                pronta = checa_estado()
-                sleep(10)
-                pronta = checa_estado()
-                sleep(10)
-                pronta = checa_estado()
-            else:
-                pronta = '0'
+            for i in range (0, 30):
+                pronta = waiting_check()
+                if(apertado == '1'):
+                    tratamento_botao()
+                sleep(1)
             print('Pronta: ' + pronta)
             client.publish(TOPIC_STATUS, pronta)
         except OSError as er:
@@ -94,10 +117,12 @@ def waiting():
             thread2 = 0
             return
 
-def checa_estado():
-    if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]' and apertado == False):
+def waiting_check():
+    if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]'):
         return '1'
     return '0'
+
+
 
 def test():
     while True:
@@ -106,10 +131,18 @@ def test():
 
 thread1 = 0
 thread2 = 0
-while True:
-    if thread1 == 0:
-        thread1 = 1
-        _thread.start_new_thread(read, ())
-    if thread2 == 0:
-        thread2 = 1
-        _thread.start_new_thread(waiting, ())
+thread3 = 0
+def working():
+    while True:
+        global thread1
+        global thread2
+        global thread3
+        if thread1 == 0:
+            thread1 = 1
+            _thread.start_new_thread(read, ())
+        if thread2 == 0:
+            thread2 = 1
+            _thread.start_new_thread(waiting, ())
+
+_thread.start_new_thread(working(), ())
+#working()
