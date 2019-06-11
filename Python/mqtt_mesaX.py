@@ -6,12 +6,15 @@ def mqtt_mesa(topic):
 	    client.subscribe(topic)
 
     def on_message(client, userdata, msg):
-        msg = msg.payload.decode("utf-8").split('|')
-        distancia = float(msg[0])
-        RFID = msg[1]
-        peso = float(msg[2])
+        if(True):
+            msg = msg.payload.decode("utf-8").split('|')
+            print(msg.topic)
+            distancia = float(msg[0])
+            RFID = msg[1]
+            peso = float(msg[2])
+
         #print(peso)
-        print('Distancia: {:03.0f} cm, RFID: {}, Peso: {:04.0f} g'.format(distancia, RFID, peso))
+            print('Distancia: {:03.0f} cm, RFID: {}, Peso: {:04.0f} g'.format(distancia, RFID, peso))
         #print(msg)
         #print(msg.payload.decode("utf-8").split(','))
 
@@ -20,4 +23,4 @@ def mqtt_mesa(topic):
     client.on_message = on_message
     client.connect('localhost', 1883, 60)
 
-    client.loop_forever()
+    #client.loop_forever()

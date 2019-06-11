@@ -9,16 +9,22 @@ import machine
 from hx711 import HX711
 import _thread
 import sys
+from machine import reset
 
 #MQTT
 SERVER = '10.3.141.1'  # MQTT Server Address (Change to the IP address of your Pi)
-CLIENT_ID = 'MESA1'
-TOPIC = b'mesa1_sensores'
-TOPIC_STATUS = b'mesa1_pronta'
+CLIENT_ID = 'MESA2'
+TOPIC = b'mesa2'
 
 client = MQTTClient(CLIENT_ID, SERVER)
-connection = client.connect()   # Connect to MQTT broker
 
+try:
+    sleep(10)
+    print('Conectando...')
+    connection = client.connect()   # Connect to MQTT broker
+except OSError as er:
+    print('Erro na conexao. Reiniciando...')
+    reset()
 #ULTRASSONICO
 sensor = HCSR04(trigger_pin=26, echo_pin=25, echo_timeout_us=10000)
 distancia = 0
@@ -42,24 +48,20 @@ def tratamento_botao():
             global pronta
             if(pronta == '1'):
                 pronta = '0'
-            client.publish(TOPIC_STATUS, pronta)
+            msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
+            client.publish(TOPIC, msg)
             print('Cancelamento. Pronta: ' + pronta)
             for i in range (0, 60):
                 print('Esperando... ' + str(59 - i))
                 if(i % 10 == 0):
-                    client.publish(TOPIC_STATUS, pronta)
+                    msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
+                    client.publish(TOPIC, msg)
                 sleep(1)
             apertado = '0'
     except OSError as er:
         apertado = '0'
         print(er.args[0])
         print('Erro no botao')
-        #if(er.args[0] == 104):
-           # print('Connection error.')
-           # client.connect()
-        #global thread2
-        #thread2 = 0
-
 
 #HX711: DATA = 32, SCK=33
 hx = HX711(32,33)
@@ -82,22 +84,15 @@ def read():
             distancia = sensor.distance_cm()
             global peso
             peso = hx.read()
-            msg = (b'{0:3}|{1:3}|{2:3}'.format(distancia, str(rfid), peso))
+            msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
+            #msg = (b'{0}|{1:3}|{2:3}|{3:3}'.format(pronta, distancia, str(rfid), peso))
             client.publish(TOPIC, msg)  # Publish sensor data to MQTT topic
             print(msg)
 
         except OSError as er:
-            #if(er.args[0] == 104):
-            #    print('Connection error.')
-            #    client.connect()
             print(er.args[0])
             print('Erro na coleta.')
-            #print('Failed to read sensor.')
-            #continue
-            #global threadl1
-            #thread1 = 0
             continue
-            #return
         sleep(4)
 
 def waiting():
@@ -111,17 +106,12 @@ def waiting():
                     tratamento_botao()
                 sleep(1)
             print('Pronta: ' + pronta)
-            client.publish(TOPIC_STATUS, pronta)
+            msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
+            client.publish(TOPIC, msg)
         except OSError as er:
             print(er.args[0])
             print('Erro na espera')
-            #if(er.args[0] == 104):
-            #    print('Connection error.')
-            #    client.connect()
-            #global thread2
-            #thread2 = 0
             continue
-            #return
 
 def waiting_check():
     if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]'):

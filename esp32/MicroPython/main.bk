@@ -9,16 +9,22 @@ import machine
 from hx711 import HX711
 import _thread
 import sys
+import machine
 
 #MQTT
 SERVER = '10.3.141.1'  # MQTT Server Address (Change to the IP address of your Pi)
 CLIENT_ID = 'MESA1'
-TOPIC = b'mesa1_sensores'
-TOPIC_STATUS = b'mesa1_pronta'
+TOPIC = b'mesa1/sensores'
+TOPIC_STATUS = b'mesa1/pronta'
 
 client = MQTTClient(CLIENT_ID, SERVER)
-connection = client.connect()   # Connect to MQTT broker
 
+try:
+    print('Conectando...')
+    connection = client.connect()   # Connect to MQTT broker
+except OSError as er:
+    print('Erro na conexao. Reiniciando...')
+    machine.soft_reset()
 #ULTRASSONICO
 sensor = HCSR04(trigger_pin=26, echo_pin=25, echo_timeout_us=10000)
 distancia = 0
@@ -54,12 +60,6 @@ def tratamento_botao():
         apertado = '0'
         print(er.args[0])
         print('Erro no botao')
-        #if(er.args[0] == 104):
-           # print('Connection error.')
-           # client.connect()
-        #global thread2
-        #thread2 = 0
-
 
 #HX711: DATA = 32, SCK=33
 hx = HX711(32,33)
@@ -87,17 +87,9 @@ def read():
             print(msg)
 
         except OSError as er:
-            #if(er.args[0] == 104):
-            #    print('Connection error.')
-            #    client.connect()
             print(er.args[0])
             print('Erro na coleta.')
-            #print('Failed to read sensor.')
-            #continue
-            #global threadl1
-            #thread1 = 0
             continue
-            #return
         sleep(4)
 
 def waiting():
@@ -115,13 +107,7 @@ def waiting():
         except OSError as er:
             print(er.args[0])
             print('Erro na espera')
-            #if(er.args[0] == 104):
-            #    print('Connection error.')
-            #    client.connect()
-            #global thread2
-            #thread2 = 0
             continue
-            #return
 
 def waiting_check():
     if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]'):
