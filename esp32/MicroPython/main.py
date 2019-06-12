@@ -13,8 +13,8 @@ from machine import reset
 
 #MQTT
 SERVER = '10.3.141.1'  # MQTT Server Address (Change to the IP address of your Pi)
-CLIENT_ID = 'MESA2'
-TOPIC = b'mesa2'
+CLIENT_ID = 'MESA3'
+TOPIC = b'mesa3'
 
 client = MQTTClient(CLIENT_ID, SERVER)
 

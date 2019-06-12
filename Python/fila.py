@@ -3,7 +3,7 @@ import queue
 import paho.mqtt.client as mqtt
 import _thread
 from time import sleep
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -76,11 +76,7 @@ def mqtt_thread():
     client.connect('localhost', 1883, 60)
     client.loop_forever()
 
-@app.route("/")
-def html():
-    return render_template('trayker.html')
-
-@app.route("/API", methods=['GET'])
+@app.route("/", methods=['GET'])
 def index():
     resposta = {
         'mesa1': {

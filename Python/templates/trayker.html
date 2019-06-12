@@ -1,0 +1,147 @@
+
+<!DOCTYPE>
+
+  <head>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Oxygen:400,700&display=swap" rel="stylesheet">
+    
+    <style type="text/css">
+    body{
+      background-color: whitesmoke;
+    }
+
+    .formsite{
+      padding-right: 3.5em;
+      padding-top: 4.875em;
+    }
+
+    h2 {
+      color: rgb(255, 202, 0);  
+      font-weight: bold;
+      font-family: Oxygen;
+      margin-bottom: 5px;
+      font-size: 40px;
+    }
+
+    h4 {
+      font-family: Oxygen;
+      font-size:22px;
+      margin-bottom: 40px;
+    }
+
+    h5 {
+      font-family: Oxygen;
+      font-size:18px;
+      font-weight: bold;
+
+      
+    }
+    span {
+      font-family: Oxygen;
+      font-size: 14px;
+    }
+
+    .pergunta{
+      font-weight: bold;
+    }
+    </style>
+    <title>PRATO DO DIA | CADASTRO</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12 col-lg-12 col-sm-12 formsite">
+          <div class="row">
+            <div class="col-md-12 col-lg-12 col-sm-12">
+              <h2>Trayker</h2>
+              <h4>Off your table to the kitchen</h4>
+            </div>
+            <div class="col-md-8 col-lg-8 col-sm-8">
+              <div class="row">
+                <div class="col-md-4 col-lg-4 col-sm-4">
+                    <h5>Mesa 1</h5>
+                    <span class="pergunta">Distância: </span><span id="ultrasonico-1">20cm</span><br/>
+                    <span class="pergunta">Bandeja: </span><span id="rfid-1">ABCDE</span><br/>
+                    <span class="pergunta">Peso: </span><span  id="peso-1">300g</span><br/>
+                    <span class="pergunta">Status: </span><span id="status-1">Pronto</span><br/>
+                </div>
+                <div class="col-md-4 col-lg-4 col-sm-4">
+                    <h5>Mesa 2</h5>
+                    <span class="pergunta">Distância: </span><span id="ultrasonico-2"></span><br/>
+                    <span class="pergunta">Bandeja: </span><span id="rfid-2"></span><br/>
+                    <span class="pergunta">Peso: </span><span id="peso-2"></span><br/>
+                    <span class="pergunta">Status: </span><span id="status-2"></span><br/> 
+                </div>
+                <div class="col-md-4 col-lg-4 col-sm-4">
+                    <h5>Mesa 3</h5>
+                    <span class="pergunta">Distância: </span><label id="ultrasonico-3"></label><br/>
+                    <span class="pergunta">Bandeja: </span><span id="rfid-3"></span><br/>
+                    <span class="pergunta">Peso: </span><span id="peso-3"></span><br/>
+                    <span class="pergunta">Status: </span><span id="status-3"></span><br/>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 col-sm-4 col-lg-4">
+              <h5>FILA</h5>
+              <h5>Mesa 1</h5>
+              <h5>Mesa 2</h5>
+              <h5>Mesa 3</h5>              
+            </div>
+          </div>          
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPTS DO BOOTSTRAP -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js"></script>
+    <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js"></script>    
+    <script type="text/javascript">
+      var myVar = setInterval(myTimer, 500);
+
+      function myTimer(){
+        const promise = obterEndereco();
+            promise
+                .then(dado => {
+                console.log('sucesso');
+                if (dado.erro) throw new Error('Erro')
+                mostrarMesas(dado)
+                console.log(dado);
+            })
+            .catch(err => {
+                console.log ('---Erro');
+                console.log(err.message);
+            })
+      }
+
+      async function obterEndereco(){
+        // let url = `https://viacep.com.br/ws/80230000/json`;
+		let url = `http://10.3.141.1:8080/API`;
+        const resposta = await fetch(url);
+        if (!resposta.ok) throw new Error('CEP inválido');
+        const json = await resposta.json();
+        return json;
+      }
+      
+      function mostrarMesas(dado) {
+        $('#ultrasonico-1').html(dado.mesa1.ultrassonico);
+        $('#rfid-1').html(dado.mesa1.rfid);
+        $('#peso-1').html(dado.mesa1.peso);
+        $('#status-1').html(dado.mesa1.pronta);
+		
+		$('#ultrasonico-2').html(dado.mesa2.ultrassonico);
+        $('#rfid-2').html(dado.mesa2.rfid);
+        $('#peso-2').html(dado.mesa2.peso);
+        $('#status-2').html(dado.mesa2.pronta);
+
+        $('#ultrasonico-3').html(dado.mesa3.ultrassonico);
+        $('#rfid-3').html(dado.mesa3.rfid);
+        $('#peso-3').html(dado.mesa3.peso);
+        $('#status-3').html(dado.mesa3.pronta);
+      }
+
+    </script>
+  </body>
+</html>
