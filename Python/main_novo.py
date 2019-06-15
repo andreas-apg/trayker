@@ -62,9 +62,9 @@ def on_message(client, userdata, msg):
         global distancia3
         distancia3 = distancia
         global rfid3
-        rfid2 = RFID
+        rfid3 = RFID
         global peso3
-        peso2 = peso
+        peso3 = peso
         global pronta3
         pronta3 = pronta
     #print(msg.payload.decode("utf-8").split(','))

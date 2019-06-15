@@ -40,14 +40,14 @@
     }
     span {
       font-family: Oxygen;
-      font-size: 14px;
+      font-size: 17px;
     }
 
     .pergunta{
       font-weight: bold;
     }
     </style>
-    <title>PRATO DO DIA | CADASTRO</title>
+    <title>TRAYKER | O ROBO COLETOR</title>
   </head>
   <body>
     <div class="container-fluid">
@@ -62,10 +62,10 @@
               <div class="row">
                 <div class="col-md-4 col-lg-4 col-sm-4">
                     <h5>Mesa 1</h5>
-                    <span class="pergunta">Distância: </span><span id="ultrasonico-1">20cm</span><br/>
-                    <span class="pergunta">Bandeja: </span><span id="rfid-1">ABCDE</span><br/>
-                    <span class="pergunta">Peso: </span><span  id="peso-1">300g</span><br/>
-                    <span class="pergunta">Status: </span><span id="status-1">Pronto</span><br/>
+                    <span class="pergunta">Distância: </span><span id="ultrasonico-1"></span><br/>
+                    <span class="pergunta">Bandeja: </span><span id="rfid-1"></span><br/>
+                    <span class="pergunta">Peso: </span><span  id="peso-1"></span><br/>
+                    <span class="pergunta">Status: </span><span id="status-1"></span><br/>
                 </div>
                 <div class="col-md-4 col-lg-4 col-sm-4">
                     <h5>Mesa 2</h5>
@@ -99,7 +99,7 @@
     <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js"></script>
     <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js"></script>    
     <script type="text/javascript">
-      var myVar = setInterval(myTimer, 500);
+      var myVar = setInterval(myTimer, 1500);
 
       function myTimer(){
         const promise = obterEndereco();
