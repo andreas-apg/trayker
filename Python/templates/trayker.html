@@ -120,7 +120,7 @@
         // let url = `https://viacep.com.br/ws/80230000/json`;
 		let url = `http://10.3.141.1:8080/API`;
         const resposta = await fetch(url);
-        if (!resposta.ok) throw new Error('CEP inválido');
+        if (!resposta.ok) throw new Error('API inválida');
         const json = await resposta.json();
         return json;
       }

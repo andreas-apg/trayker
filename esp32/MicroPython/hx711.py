@@ -9,7 +9,7 @@ class HX711:
     def __init__(self, dout, pd_sck, gain=128):
         self.gain = gain
         if self.gain != 128: return("Error: Gain not supported")
-        self.SCALING_FACTOR = 627
+        self.SCALING_FACTOR = 330
         self.dataPin = Pin(dout, Pin.IN)
         self.pdsckPin = Pin(pd_sck, Pin.OUT, value=0)
         self.powerUp()

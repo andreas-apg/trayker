@@ -70,6 +70,10 @@ peso = 0
 #RFID:
 rfid = '[0, 0, 0, 0]'
 def read():
+    sleep(2)
+    hx.tare()
+    print(hx.read())
+    sleep(2)
     while True:
         try:
             global rfid
@@ -78,38 +82,18 @@ def read():
     		    rfid = '[0, 0, 0, 0]'
             global distancia
             distancia = sensor.distance_cm()
-            #peso = hx.read()
-            msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
-            #msg = (b'{0}|{1:3}|{2:3}|{3:3}'.format(pronta, distancia, str(rfid), peso))
-            client.publish(TOPIC, msg)  # Publish sensor data to MQTT topic
-            print('RFID e distancia.')
-            print(msg)
-        except OSError as er:
-            print(er.args[0])
-            print('Erro na coleta.')
-            continue
-        sleep(1)
-
-def read_peso():
-    sleep(2)
-    hx.tare()
-    print(hx.read())
-    sleep(2)
-    while True:
-        try:
             global peso
             peso = hx.read()
             msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
             #msg = (b'{0}|{1:3}|{2:3}|{3:3}'.format(pronta, distancia, str(rfid), peso))
             client.publish(TOPIC, msg)  # Publish sensor data to MQTT topic
-            print('Peso.')
             print(msg)
 
         except OSError as er:
             print(er.args[0])
-            print('Erro na coleta do peso.')
+            print('Erro na coleta.')
             continue
-        sleep(1)
+        sleep(4)
 
 def waiting():
     global pronta
@@ -130,13 +114,12 @@ def waiting():
             continue
 
 def waiting_check():
-    if(distancia > 45 and peso < 315 and rfid != '[0, 0, 0, 0]'):
+    if(distancia > 30 and peso < 315 and rfid != '[0, 0, 0, 0]'):
         return '1'
     return '0'
 
 def working():
      _thread.start_new_thread(read, ())
-     _thread.start_new_thread(read_peso, ())
      _thread.start_new_thread(waiting, ())
 
 working()
