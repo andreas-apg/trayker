@@ -1,6 +1,7 @@
 import os
 import queue
 import logging
+import datetime
 import paho.mqtt.client as mqtt
 import _thread
 from time import sleep
@@ -14,12 +15,11 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(20)
 CORS(app)
 
 try:
+    global bs
     bs = serial.Serial("/dev/rfcomm0", baudrate=9600)
     print('Bluetooth conectado.')
 except OSError as er:
     print('Falha ao conectar o Bluetooth')
-
-estado_robo = ' '
 
 prontas = ['0', '0', '0', '0']
 distancia1 = 0
@@ -69,6 +69,7 @@ def on_message(client, userdata, msg):
         global pronta1
         pronta1 = pronta
         prontas[1] = pronta
+
     elif(mesa == 'MESA2'):
         print(mesa)
         global distancia2
@@ -82,6 +83,7 @@ def on_message(client, userdata, msg):
         global pronta2
         pronta2 = pronta
         prontas[2] = pronta
+
     elif(mesa == 'MESA3'):
         print(mesa)
         global distancia3
@@ -95,8 +97,8 @@ def on_message(client, userdata, msg):
         global pronta3
         pronta3 = pronta
         prontas[3] = pronta
+
     agendamento()
-    #print(msg.payload.decode("utf-8").split(','))
 
 def mqtt_thread():
     client = mqtt.Client()
@@ -137,106 +139,93 @@ def agendamento():
 #    while True:
     global fila
     if(pronta1 != anterior1):
-        if(pronta1 == '1'):
+        if(pronta1 == '1' and atendendo != 'MESA1'):
             print('Fila: Inserindo mesa 1')
             fila.insere('MESA1')
             print(fila.get_fila())
         else:
-            if(atendendo != 'MESA1'):
-                print('Fila: Removendo mesa 1')
-                fila.remove('MESA1')
-                print(fila.get_fila())
+#            if(atendendo != 'MESA1'):
+            print('Fila: Removendo mesa 1')
+            fila.remove('MESA1')
+            print(fila.get_fila())
     if(pronta2 != anterior2):
-        if(pronta2 == '1'):
+        if(pronta2 == '1' and atendendo != 'MESA2'):
             print('Fila: Inserindo mesa 2')
             fila.insere('MESA2')
             print(fila.get_fila())
         else:
-            if(atendendo != 'MESA2'):
-                print('Fila: Removendo mesa 2')
-                fila.remove('MESA2')
-                print(fila.get_fila())
-    if(pronta3 != anterior3):
+#            if(atendendo != 'MESA2'):
+            print('Fila: Removendo mesa 2')
+            fila.remove('MESA2')
+            print(fila.get_fila())
+    if(pronta3 != anterior3 and atendendo != 'MESA3'):
         if(pronta3 == '1'):
             print('Fila: Inserindo mesa 3')
             fila.insere('MESA3')
             print(fila.get_fila())
         else:
-            if(atendendo != 'MESA3'):
-                print('Removendo mesa 3')
-                fila.remove('MESA3')
-                print(fila.get_fila())
+#            if(atendendo != 'MESA3'):
+            print('Removendo mesa 3')
+            fila.remove('MESA3')
+            print(fila.get_fila())
 #    if(atendendo == 'NENHUMA'):
 #        if(len(fila.get_fila()) > 0):
 #            atendendo = fila.pop
 
-def flask():
-    logging.basicConfig(level=logging.CRITICAL)
-    app.logger.disabled = True
-    app.run(host='0.0.0.0', port=8080, debug=False)
-
-#def send(caractere):
-    #r = bs.write(caractere)
-    #data = bs.readline()
-    #print(data)
-    #return data
-
-def read_blue():
-    data = bs.readline()
-#    print(data)
-    # iniciativa
-    if(data == 'K'): # robo na cozinha E livre
-        global estado_robo
-        global atendendo
-        atendendo = 'NENHUMA'
-        estado_robo = 'cozinha' # robo fica escutando um caractere
-    if(data == 'A'): # robo avisa que ira tirar a bandeja
-                     # robo envia um 'C' como ack
-#        bs.write(b'C')
-        mesa_num = bs.readline() # robo responde numero da mesa
-        print('prontas[{0}]: {1}'.format(mesa_num, prontas[int(mesa_num)]))
-        if(prontas[int(mesa_num)] == '1'):
-            bs.write(b'B') # confirma
-#            data = bs.readline()
-#            if data == 'C':
-#                estado_robo = 'transportando'
-        else:
-            bs.write(b'0') # cancela
-#            data = bs.readline()
-#            if data == 'C':
-#                estado_robo = 'cancelado'
-    # resposta
-    if(data == atendendo[4]): # echo que confirma mesa
-        estado_robo = 'caminhando'
-
 def teste():
     while True:
         sleep(10)
-        print('{} {} {}'.format(distancia1, rfid1, peso1))
-        print('{} {} {}'.format(distancia2, rfid2, peso2))
-        print('{} {} {}'.format(distancia3, rfid3, peso3))
+        print('1. {} {} {}'.format(distancia1, rfid1, peso1))
+        print('2. {} {} {}'.format(distancia2, rfid2, peso2))
+        print('3. {} {} {}'.format(distancia3, rfid3, peso3))
+        print(fila.get_fila())
+
+def flask():
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    app.run(host='0.0.0.0', port=8080, debug=False)
+
+def read_blue():
+    data = bs.read()
+    print("Valor lido no bluetooth: {0}".format(data))
+
+    # iniciativa
+    if(data == b'K'): # robo na cozinha E livre
+        global atendendo
+        atendendo = 'NENHUMA'
+
+    elif(data == b'A'): # robo avisa que ira tirar a bandeja
+        mesa_num = bs.read() # aguarda que o robo confirme numero da bandeja
+        print('prontas[{0}]: {1}'.format(mesa_num, prontas[int(mesa_num)]))
+        if(prontas[int(mesa_num)] == 1):
+            bs.write(b'B') # confirma
+        else:
+            bs.write(b'0') # cancela
+
+    # resposta
+    elif(data == atendendo[4]): # Traykson ecoa confirmando recebimento
+        a = 0 # Este eh o fluxo desejado
+    else:
+        a = 0 # Estah com algum problema!
 
 def main():
-    while True:
-#        print('main!')
-        if(atendendo == 'NENHUMA' and estado_robo != 'cozinha'):
-            print('Obtendo primeiro objetivo')
-            global estado_robo
-            estado_robo = 'cozinha'
+    global atendendo
+    atendendo = ''
+    while (atendendo == ''):
         bs.write(b'T')
+        print('Enviei a letra T')
         read_blue()
-#        print(estado_robo)
-        if(estado_robo == 'cozinha'):
-#            print('Tentando enviar novo objetivo')
-#            print(len(fila.get_fila()))
-            global atendendo
-            if(len(fila.get_fila()) > 0):
-#                print('ms krl')
-                atendendo = fila.pop()
-#                print(atendendo)
-                bs.write(bytes(atendendo[4], 'utf-8'))
-                print('Enviando novo objetivo: {0}'.format(atendendo))
 
+    while True:
+        global atendendo
+        if (atendendo == 'NENHUMA'):
+            if(len(fila.get_fila()) > 0):
+                atendendo = fila.pop()
+                bs.write(bytes(atendendo[4], 'utf-8'))
+                print('Enviando novo objetivo: {0}'.format(atendendo[4]))
+                read_blue()
+        else:
+            read_blue()
 
 _thread.start_new_thread(teste, ())
 _thread.start_new_thread(mqtt_thread, ())
