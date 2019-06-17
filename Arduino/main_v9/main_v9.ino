@@ -163,114 +163,7 @@ void drop (int pwr);
 
 
 //---------------------------------Configuracoes---------------------------------------------
-void setup()
-{
 
-  Serial.begin(9600);
-  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
-
-
-  //--------Configuracao Buzzer------------------------
-
-  pinMode(BUZ, OUTPUT);
-
-  //--------Configuracao SRFID-------------------------
-
-  SPI.begin();        // Init SPI bus
-
-  delay(250);
-
-  for (uint8_t reader = 0; reader < NR_OF_READERS; reader++)
-  {
-    mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN); // Init each MFRC522 card
-    // Serial.print(F("Reader "));
-    // Serial.print(reader);
-    // Serial.print(F(": "));
-    // mfrc522[reader].PCD_DumpVersionToSerial();
-  }
-
-  delay(250);
-  //--------Configuracao Encoders----------------------
-  //Pino do sensor como entrada
-  pinMode(pino_D0, INPUT);
-  pinMode(pino_D1, INPUT);
-
-  //Aciona o contador a cada pulso
-  attachInterrupt(digitalPinToInterrupt(pino_D0), contadorC, FALLING);
-  attachInterrupt(digitalPinToInterrupt(pino_D1), contadorB, FALLING);
-
-  //Variaveis
-  pulsosC = 0;
-  pulsosB = 0;
-  rpmB = 0;
-  rpmC = 0;
-  timeold = 0;
-  time_elaps = 0;
-
-  comPeso = false;
-  tentativa = 0;
-  velocidadeBase = 265;
-
-  //--------Configuracao Motores----------------------
-  pinMode(IN1A, OUTPUT);
-  pinMode(IN2A, OUTPUT);
-  pinMode(IN3B, OUTPUT);
-  pinMode(IN4B, OUTPUT);
-  pinMode(IN1C, OUTPUT);
-  pinMode(IN2C, OUTPUT);
-  pinMode(IN3D, OUTPUT);
-  pinMode(IN4D, OUTPUT);
-
-  pinMode(velocidadeA, OUTPUT);
-  pinMode(velocidadeB, OUTPUT);
-  pinMode(velocidadeC, OUTPUT);
-  pinMode(velocidadeD, OUTPUT);
-
-  pinMode(swt_bottom, INPUT_PULLUP);
-  pinMode(swt_top, INPUT_PULLUP);
-
-  //------Configuração Infravermelho--------------------------
-  pinMode(S1_pin, INPUT);
-  pinMode(S2_pin, INPUT);
-  pinMode(S3_pin, INPUT);
-  pinMode(S4_pin, INPUT);
-  pinMode(S5_pin, INPUT);
-
-  //--------Configuracao PID--------------------------
-
-  //initialize the variables we're linked to
-  InputC = rpmC;
-  SetpointC = 125;
-  myPID_C.SetOutputLimits(95, 250);
-
-  InputB = rpmB;
-  SetpointB = 125;
-  myPID_B.SetOutputLimits(95, 250);
-
-  //turn the PID on
-  myPID_C.SetMode(AUTOMATIC);
-  myPID_B.SetMode(AUTOMATIC);
-
-  digitalWrite(IN3B, HIGH);
-  digitalWrite(IN4B, LOW);
-  digitalWrite(IN1C, LOW);
-  digitalWrite(IN2C, HIGH);
-  //analogWrite(velocidadeC, (int) 100);
-
-  old_erroP = 0;
-  erroI = 0;
-  erroD = 0;
-
-  //------------------- bla ---
-  // inicia tentando chegar aa mesa
-  objetivo = 0; // 0 = tente chegar na mesa
-
-  if (!comPeso && digitalRead(swt_bottom) == HIGH) {
-    drop(80);
-  }
-
-  while (!check_card(tray));
-}
 
 void livre() {
   //MA
@@ -340,7 +233,7 @@ void atras(int velA, int velB, int velC) {
   //MA livre
   digitalWrite(IN1A, LOW);
   digitalWrite(IN2A, HIGH);
-  analogWrite(velocidadeA, velA);
+  analogWrite(velocidadeA, velA * 0.9);
 
   //MC horario
   digitalWrite(IN1C, LOW);
@@ -358,7 +251,7 @@ void afrente(int velA, int velB, int velC) {
   //MA livre
   digitalWrite(IN1A, HIGH);
   digitalWrite(IN2A, LOW);
-  analogWrite(velocidadeA, (int) velA);
+  analogWrite(velocidadeA, velA * 0.9);
 
   //MC antihorario
   digitalWrite(IN1C, LOW);
@@ -646,6 +539,8 @@ void recolher_bandeja() {
     // if (true) {
     lift(240);
     comPeso = true;
+    Serial.print('S');
+    play_tone(NOTE_C5);
     while (!(testeRFID(mfrc522_uid, cards[meio1]) || testeRFID(mfrc522_uid, cards[meio2]) || testeRFID(mfrc522_uid, cards[meio3]))
            &&
            (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
@@ -674,9 +569,11 @@ void recolher_bandeja() {
       tentativa++;
       recolher_bandeja();
     } else {
+      Serial.print('N');
       tentativa = 0;
       turn_right();
       objetivo = 1;
+      play_tone(NOTE_C3);
     }
   }
 }
@@ -704,7 +601,7 @@ void aproximar() {
           parada();
           Serial.print('A');
           delay(1000); // TO DO gritar()
-          for (int i = 0; i < 3; i++)
+          for (int i = 0; i < 7; i++)
           {
             play_tone();
             delay(500);
@@ -715,6 +612,7 @@ void aproximar() {
 
           cancelar = Serial.read();
           if (cancelar == '0') {
+            Serial.print('0');
             objetivo = 1;
             turn_right();
             while (!check_card(cross)
@@ -724,47 +622,20 @@ void aproximar() {
             }
             turn_left();
           } else if (cancelar == 'B') {
-            
+            play_tone(NOTE_E3);
+            Serial.print('B');
           } else {
-            while(1) {
+            while (1) {
               play_tone(NOTE_E3);
               delay(200);
             }
           }
 
-          //          if (Serial.available()) {
-          //            if (Serial.read() == 'C')
-          //              Serial.print(destino);
-          //            delay(500);
-          //
-          //            if (Serial.read() == '0') {
-          //              objetivo = 1;
-          //              turn_right();
-          //              while (!check_card(cross)
-          //                     ||
-          //                     (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
-          //                seguir_linha();
-          //              }
-          //              turn_left();
-          //            }
-          //            Serial.print('C');
-          //          } else {
-          //            objetivo = 1;
-          //            turn_right();
-          //            while (!check_card(cross)
-          //                   ||
-          //                   (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
-          //              seguir_linha();
-          //            }
-          //            turn_left();
-          //            // velocidadeBase = 270;
-          //          }
-
-
         } else if (objetivo == 1) {
+          Serial.print('W');
           turn_left();
         } else {
-
+          Serial.print('X');
         }
       } else if (testeRFID(mfrc522_uid, cards[mesa1]) || testeRFID(mfrc522_uid, cards[mesa2]) || testeRFID(mfrc522_uid, cards[mesa3])) {
         if (objetivo == 0) {
@@ -779,15 +650,10 @@ void aproximar() {
 
         }
       }
-      //      else if (testeRFID(mfrc522_uid, cards[cozinha])) {
-      //        objetivo = 0;
-      //        comPeso = false;
-      //        turn_right();
-      //      } else {
-      //
-      //      }
-    } else {
+
+    } else {      
       seguir_linha();
+      
     }
   }
 }
@@ -942,11 +808,123 @@ void dump_byte_array(byte * buffer, byte bufferSize) {
   // Serial.print(output);
 }
 
+void setup()
+{
+
+  Serial.begin(9600);
+  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+
+
+  //--------Configuracao Buzzer------------------------
+
+  pinMode(BUZ, OUTPUT);
+
+  //--------Configuracao SRFID-------------------------
+
+  SPI.begin();        // Init SPI bus
+
+  delay(250);
+
+  for (uint8_t reader = 0; reader < NR_OF_READERS; reader++)
+  {
+    mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN); // Init each MFRC522 card
+    // Serial.print(F("Reader "));
+    // Serial.print(reader);
+    // Serial.print(F(": "));
+    // mfrc522[reader].PCD_DumpVersionToSerial();
+  }
+
+  delay(250);
+  //--------Configuracao Encoders----------------------
+  //Pino do sensor como entrada
+  pinMode(pino_D0, INPUT);
+  pinMode(pino_D1, INPUT);
+
+  //Aciona o contador a cada pulso
+  attachInterrupt(digitalPinToInterrupt(pino_D0), contadorC, FALLING);
+  attachInterrupt(digitalPinToInterrupt(pino_D1), contadorB, FALLING);
+
+  //Variaveis
+  pulsosC = 0;
+  pulsosB = 0;
+  rpmB = 0;
+  rpmC = 0;
+  timeold = 0;
+  time_elaps = 0;
+
+  comPeso = false;
+  tentativa = 0;
+  velocidadeBase = 265;
+
+  //--------Configuracao Motores----------------------
+  pinMode(IN1A, OUTPUT);
+  pinMode(IN2A, OUTPUT);
+  pinMode(IN3B, OUTPUT);
+  pinMode(IN4B, OUTPUT);
+  pinMode(IN1C, OUTPUT);
+  pinMode(IN2C, OUTPUT);
+  pinMode(IN3D, OUTPUT);
+  pinMode(IN4D, OUTPUT);
+
+  pinMode(velocidadeA, OUTPUT);
+  pinMode(velocidadeB, OUTPUT);
+  pinMode(velocidadeC, OUTPUT);
+  pinMode(velocidadeD, OUTPUT);
+
+  pinMode(swt_bottom, INPUT_PULLUP);
+  pinMode(swt_top, INPUT_PULLUP);
+
+  //------Configuração Infravermelho--------------------------
+  pinMode(S1_pin, INPUT);
+  pinMode(S2_pin, INPUT);
+  pinMode(S3_pin, INPUT);
+  pinMode(S4_pin, INPUT);
+  pinMode(S5_pin, INPUT);
+
+  //--------Configuracao PID--------------------------
+
+  //initialize the variables we're linked to
+  InputC = rpmC;
+  SetpointC = 125;
+  myPID_C.SetOutputLimits(95, 250);
+
+  InputB = rpmB;
+  SetpointB = 125;
+  myPID_B.SetOutputLimits(95, 250);
+
+  //turn the PID on
+  myPID_C.SetMode(AUTOMATIC);
+  myPID_B.SetMode(AUTOMATIC);
+
+  digitalWrite(IN3B, HIGH);
+  digitalWrite(IN4B, LOW);
+  digitalWrite(IN1C, LOW);
+  digitalWrite(IN2C, HIGH);
+  //analogWrite(velocidadeC, (int) 100);
+
+  old_erroP = 0;
+  erroI = 0;
+  erroD = 0;
+
+  //------------------- bla ---
+  // inicia tentando chegar aa mesa
+  objetivo = 0; // 0 = tente chegar na mesa
+
+  if (!comPeso && digitalRead(swt_bottom) == HIGH) {
+    drop(80);
+  }
+
+  while (!check_card(tray));
+}
+
 //-----------------------------------------MAIN---------------------------------------------
 void loop() {
   // check_encoders();
 
   // Objetivo: 0 = va pra mesa, 1 = va pra cozinha
+
+  // Envia para a base que o robô está na cozinha
+  Serial.print('K');
 
   // Aguarda comando da base via bluetooth
   while (!Serial.available()) { // verifica se existem bytes a serem lidos da porta serial
@@ -959,10 +937,10 @@ void loop() {
   // 1 = lugar 1
   // 2 = lugar 2 etc.
   destino = Serial.read(); // Lê 1 byte da porta serial
-  
+
   if (destino != '0' && destino != 'T') {
-  Serial.print(destino); // Ecoa o dado lido para confirmar recebimento
-  
+    Serial.print(destino); // Ecoa o dado lido para confirmar recebimento
+
     livre();
     switch (destino) {
       case '0':
@@ -1013,7 +991,7 @@ void loop() {
     turn_left();
     comPeso = false;
     objetivo = 0;
-    Serial.print('K');
+    //Serial.print('K');
   }
 
   if (destino == 'T') {
