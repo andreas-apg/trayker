@@ -129,17 +129,19 @@
         $('#rfid-1').html(dado.mesa1.rfid);
         $('#peso-1').html(dado.mesa1.peso);
         $('#status-1').html(dado.mesa1.pronta);
+        $('#mesa-1-div').css('opacity', 1.0 - dado.mesa1.idade * 0.065);
 
-	    $('#ultrasonico-2').html(dado.mesa2.ultrassonico);
+		    $('#ultrasonico-2').html(dado.mesa2.ultrassonico);
         $('#rfid-2').html(dado.mesa2.rfid);
         $('#peso-2').html(dado.mesa2.peso);
         $('#status-2').html(dado.mesa2.pronta);
+        $('#mesa-2-div').css('opacity', 1.0 - dado.mesa2.idade * 0.065);
 
         $('#ultrasonico-3').html(dado.mesa3.ultrassonico);
         $('#rfid-3').html(dado.mesa3.rfid);
         $('#peso-3').html(dado.mesa3.peso);
         $('#status-3').html(dado.mesa3.pronta);
-
+        $('#mesa-3-div').css('opacity', 1.0 - dado.mesa3.idade * 0.065);
 
         if (dado.mesa1.peso > 315){
           document.getElementById("mesa-1-div").style.backgroundColor = "rgba(236, 14, 14, 0.47)"; 
