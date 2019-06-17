@@ -145,7 +145,8 @@ def index():
             'pronta': pronta3,
             'idade': vida_tt[3]
         },
-        'fila': fila.get_fila()
+        'fila': fila.get_fila(),
+        'atendendo': atendendo
     }
     return jsonify(resposta)
 
@@ -235,7 +236,7 @@ def read_blue():
                     fila.insere('MESA{}'.format(mesa_num.decode("utf-8")))
                     print('Fila: {}'.format(fila.get_fila()))
                 else:
-                    print('Pqpnaoseioqueestaacontecendoaaaaaaaaaaaaaaaa')
+                    print('Valor invalido recebido no Bluetooth: {}'.format(confirma))
         else:
             bs.write(b'0') # cancela
             confirma = bs.read()
@@ -251,8 +252,8 @@ def read_blue():
 
 def main():
     global atendendo
-    atendendo = ''
-    while (atendendo == ''):
+    atendendo = 'INICIALIZANDO...'
+    while (atendendo == 'INICIALIZANDO...'):
         #bs.write(b'T')
         #print('Enviei a letra T')
         read_blue()

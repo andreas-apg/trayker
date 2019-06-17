@@ -8,11 +8,11 @@
     <link href="https://fonts.googleapis.com/css?family=Oxygen:400,700&display=swap" rel="stylesheet">
     
     <style type="text/css">
-    body{
+    body {
       background-color: whitesmoke;
     }
 
-    .formsite{
+    .formsite {
       padding-right: 3.5em;
       padding-top: 4.875em;
     }
@@ -22,32 +22,32 @@
       font-weight: bold;
       font-family: Oxygen;
       margin-bottom: 5px;
-      font-size: 50px;
+      font-size: 55px;
     }
 
     h4 {
       font-family: Oxygen;
-      font-size:32px;
+      font-size: 34px;
       margin-bottom: 40px;
     }
 
     h5 {
       font-family: Oxygen;
-      font-size:24px;
+      font-size:30px;
       font-weight: bold;
 
       
     }
     span {
       font-family: Oxygen;
-      font-size: 20px;
+      font-size: 28px;
     }
 
-    .pergunta{
+    .pergunta {
       font-weight: bold;
     }
 
-    .div-mesas{    
+    .div-mesas {    
       padding-top: 15px;
       padding-bottom: 15px;
     }
@@ -85,7 +85,9 @@
                 <span class="pergunta">Status: </span><span id="status-3"></span><br/>
             </div>
             <div class="col-md-3 col-sm-3 col-lg-3 div-mesas">
-              <h5>FILA</h5>                            
+              <h5>Atendendo</h5>
+              <span id="atendendoHTML"></span>
+              <h5 style="padding-top: 24px;">FILA</h5>                            
               <div id="filaHTML" class=""></div>
             </div>
           </div>
@@ -98,7 +100,7 @@
     <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js"></script>
     <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js"></script>    
     <script type="text/javascript">
-      var myVar = setInterval(myTimer, 1500);
+      var myVar = setInterval(myTimer, 500);
 
       function myTimer(){
         const promise = obterEndereco();
@@ -131,7 +133,7 @@
         $('#status-1').html(dado.mesa1.pronta);
         $('#mesa-1-div').css('opacity', 1.0 - dado.mesa1.idade * 0.065);
 
-		    $('#ultrasonico-2').html(dado.mesa2.ultrassonico);
+		$('#ultrasonico-2').html(dado.mesa2.ultrassonico);
         $('#rfid-2').html(dado.mesa2.rfid);
         $('#peso-2').html(dado.mesa2.peso);
         $('#status-2').html(dado.mesa2.pronta);
@@ -142,6 +144,8 @@
         $('#peso-3').html(dado.mesa3.peso);
         $('#status-3').html(dado.mesa3.pronta);
         $('#mesa-3-div').css('opacity', 1.0 - dado.mesa3.idade * 0.065);
+
+        $('#atendendoHTML').html(dado.atendendo);
 
         if (dado.mesa1.peso > 315){
           document.getElementById("mesa-1-div").style.backgroundColor = "rgba(236, 14, 14, 0.47)"; 
