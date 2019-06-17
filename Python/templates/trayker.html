@@ -60,21 +60,21 @@
             </div>
             <div class="col-md-8 col-lg-8 col-sm-8">
               <div class="row">
-                <div class="col-md-4 col-lg-4 col-sm-4">
+                <div id="mesa-1" class="col-md-4 col-lg-4 col-sm-4">
                     <h5>Mesa 1</h5>
                     <span class="pergunta">Distância: </span><span id="ultrasonico-1"></span><br/>
                     <span class="pergunta">Bandeja: </span><span id="rfid-1"></span><br/>
                     <span class="pergunta">Peso: </span><span  id="peso-1"></span><br/>
                     <span class="pergunta">Status: </span><span id="status-1"></span><br/>
                 </div>
-                <div class="col-md-4 col-lg-4 col-sm-4">
+                <div id="mesa-2" class="col-md-4 col-lg-4 col-sm-4">
                     <h5>Mesa 2</h5>
                     <span class="pergunta">Distância: </span><span id="ultrasonico-2"></span><br/>
                     <span class="pergunta">Bandeja: </span><span id="rfid-2"></span><br/>
                     <span class="pergunta">Peso: </span><span id="peso-2"></span><br/>
                     <span class="pergunta">Status: </span><span id="status-2"></span><br/> 
                 </div>
-                <div class="col-md-4 col-lg-4 col-sm-4">
+                <div id="mesa-3" class="col-md-4 col-lg-4 col-sm-4">
                     <h5>Mesa 3</h5>
                     <span class="pergunta">Distância: </span><label id="ultrasonico-3"></label><br/>
                     <span class="pergunta">Bandeja: </span><span id="rfid-3"></span><br/>
@@ -130,16 +130,19 @@
         $('#rfid-1').html(dado.mesa1.rfid);
         $('#peso-1').html(dado.mesa1.peso);
         $('#status-1').html(dado.mesa1.pronta);
+        $('#mesa-1').css('opacity', 1.0 - dado.mesa1.idade * 0.065);
 		
 		$('#ultrasonico-2').html(dado.mesa2.ultrassonico);
         $('#rfid-2').html(dado.mesa2.rfid);
         $('#peso-2').html(dado.mesa2.peso);
         $('#status-2').html(dado.mesa2.pronta);
+        $('#mesa-2').css('opacity', 1.0 - dado.mesa2.idade * 0.065);
 
         $('#ultrasonico-3').html(dado.mesa3.ultrassonico);
         $('#rfid-3').html(dado.mesa3.rfid);
         $('#peso-3').html(dado.mesa3.peso);
         $('#status-3').html(dado.mesa3.pronta);
+        $('#mesa-3').css('opacity', 1.0 - dado.mesa3.idade * 0.065);
       }
 
     </script>
