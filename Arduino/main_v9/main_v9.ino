@@ -421,9 +421,9 @@ void seguir_linha() {
   }
 
 
-  vA = vA * velocidadeBase / (1400 - bagulho * 100);
-  vB = vB * velocidadeBase / (1400 - bagulho * 100);
-  vC = vC * velocidadeBase / (1400 - bagulho * 100);
+  vA = vA * velocidadeBase / (1300 - bagulho * 135);
+  vB = vB * velocidadeBase / (1300 - bagulho * 135);
+  vC = vC * velocidadeBase / (1300 - bagulho * 135);
 
   //  Serial.print("ErroP: ");
   //  Serial.print(erroP);
@@ -505,9 +505,9 @@ void seguir_linha_re() {
     bagulho = 0;
   }
 
-  vA = vA * velocidadeBase / (1300 - bagulho * 100);
-  vB = vB * velocidadeBase / (1300 - bagulho * 100);
-  vC = vC * velocidadeBase / (1300 - bagulho * 100);
+  vA = vA * velocidadeBase / (1300 - bagulho * 135);
+  vB = vB * velocidadeBase / (1300 - bagulho * 135);
+  vC = vC * velocidadeBase / (1300 - bagulho * 135);
 
   //  Serial.print("ErroP: ");
   //  Serial.print(erroP);
@@ -565,7 +565,7 @@ void recolher_bandeja() {
         check_card(cross);
         seguir_linha();
       }
-      parada();
+      // parada();
       tentativa++;
       recolher_bandeja();
     } else {
