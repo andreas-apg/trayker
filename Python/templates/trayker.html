@@ -22,29 +22,34 @@
       font-weight: bold;
       font-family: Oxygen;
       margin-bottom: 5px;
-      font-size: 40px;
+      font-size: 50px;
     }
 
     h4 {
       font-family: Oxygen;
-      font-size:22px;
+      font-size:32px;
       margin-bottom: 40px;
     }
 
     h5 {
       font-family: Oxygen;
-      font-size:18px;
+      font-size:24px;
       font-weight: bold;
 
       
     }
     span {
       font-family: Oxygen;
-      font-size: 17px;
+      font-size: 20px;
     }
 
     .pergunta{
       font-weight: bold;
+    }
+
+    .div-mesas{    
+      padding-top: 15px;
+      padding-bottom: 15px;
     }
     </style>
     <title>TRAYKER | O ROBO COLETOR</title>
@@ -58,38 +63,32 @@
               <h2>Trayker</h2>
               <h4>Off your table to the kitchen</h4>
             </div>
-            <div class="col-md-8 col-lg-8 col-sm-8">
-              <div class="row">
-                <div class="col-md-4 col-lg-4 col-sm-4">
-                    <h5>Mesa 1</h5>
-                    <span class="pergunta">Distância: </span><span id="ultrasonico-1"></span><br/>
-                    <span class="pergunta">Bandeja: </span><span id="rfid-1"></span><br/>
-                    <span class="pergunta">Peso: </span><span  id="peso-1"></span><br/>
-                    <span class="pergunta">Status: </span><span id="status-1"></span><br/>
-                </div>
-                <div class="col-md-4 col-lg-4 col-sm-4">
-                    <h5>Mesa 2</h5>
-                    <span class="pergunta">Distância: </span><span id="ultrasonico-2"></span><br/>
-                    <span class="pergunta">Bandeja: </span><span id="rfid-2"></span><br/>
-                    <span class="pergunta">Peso: </span><span id="peso-2"></span><br/>
-                    <span class="pergunta">Status: </span><span id="status-2"></span><br/> 
-                </div>
-                <div class="col-md-4 col-lg-4 col-sm-4">
-                    <h5>Mesa 3</h5>
-                    <span class="pergunta">Distância: </span><label id="ultrasonico-3"></label><br/>
-                    <span class="pergunta">Bandeja: </span><span id="rfid-3"></span><br/>
-                    <span class="pergunta">Peso: </span><span id="peso-3"></span><br/>
-                    <span class="pergunta">Status: </span><span id="status-3"></span><br/>
-                </div>
-              </div>
+            <div class="col-md-3 col-lg-3 col-sm-3 div-mesas" id="mesa-1-div">
+                <h5 id="mesa-1-titulo">Mesa 1</h5>
+                <span class="pergunta">Distância: </span><span id="ultrasonico-1"></span><br/>
+                <span class="pergunta">Bandeja: </span><span id="rfid-1"></span><br/>
+                <span class="pergunta">Peso: </span><span  id="peso-1"></span><br/>
+                <span class="pergunta">Status: </span><span id="status-1"></span><br/>
             </div>
-            <div class="col-md-4 col-sm-4 col-lg-4">
-              <h5>FILA</h5>
-              <h5>Mesa 1</h5>
-              <h5>Mesa 2</h5>
-              <h5>Mesa 3</h5>              
+            <div class="col-md-3 col-lg-3 col-sm-3 div-mesas" id="mesa-2-div">
+                <h5 id="mesa-2-titulo">Mesa 2</h5>
+                <span class="pergunta">Distância: </span><span id="ultrasonico-2"></span><br/>
+                <span class="pergunta">Bandeja: </span><span id="rfid-2"></span><br/>
+                <span class="pergunta">Peso: </span><span id="peso-2"></span><br/>
+                <span class="pergunta">Status: </span><span id="status-2"></span><br/> 
             </div>
-          </div>          
+            <div class="col-md-3 col-lg-3 col-sm-3 div-mesas" id="mesa-3-div">
+                <h5 id="mesa-3-titulo">Mesa 3</h5>
+                <span class="pergunta">Distância: </span><span id="ultrasonico-3"></span><br/>
+                <span class="pergunta">Bandeja: </span><span id="rfid-3"></span><br/>
+                <span class="pergunta">Peso: </span><span id="peso-3"></span><br/>
+                <span class="pergunta">Status: </span><span id="status-3"></span><br/>
+            </div>
+            <div class="col-md-3 col-sm-3 col-lg-3 div-mesas">
+              <h5>FILA</h5>                            
+              <div id="filaHTML" class=""></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -130,8 +129,8 @@
         $('#rfid-1').html(dado.mesa1.rfid);
         $('#peso-1').html(dado.mesa1.peso);
         $('#status-1').html(dado.mesa1.pronta);
-		
-		$('#ultrasonico-2').html(dado.mesa2.ultrassonico);
+
+		    $('#ultrasonico-2').html(dado.mesa2.ultrassonico);
         $('#rfid-2').html(dado.mesa2.rfid);
         $('#peso-2').html(dado.mesa2.peso);
         $('#status-2').html(dado.mesa2.pronta);
@@ -140,6 +139,52 @@
         $('#rfid-3').html(dado.mesa3.rfid);
         $('#peso-3').html(dado.mesa3.peso);
         $('#status-3').html(dado.mesa3.pronta);
+
+        if (dado.mesa1.peso > 315){
+          document.getElementById("mesa-1-div").style.backgroundColor = "rgba(236, 14, 14, 0.47)"; 
+        }else{
+          document.getElementById("mesa-1-div").style.backgroundColor = "whitesmoke";  
+        }
+        if (dado.mesa2.peso > 315){
+          document.getElementById("mesa-2-div").style.backgroundColor = "rgba(236, 14, 14, 0.47)"; 
+        }else{
+          document.getElementById("mesa-2-div").style.backgroundColor = "whitesmoke"; 
+        }
+        if (dado.mesa3.peso > 315){
+          document.getElementById("mesa-3-div").style.backgroundColor = "rgba(236, 14, 14, 0.3)";         
+        }else{
+          document.getElementById("mesa-3-div").style.backgroundColor = "whitesmoke";           
+        }
+
+        var fila = dado.fila;//"MESA1, MESA2, MESA3";
+        //var resultado = fila.split(", ");
+
+        // Delete child
+        var elemento_pai = document.getElementById("filaHTML");
+        elemento_pai.innerHTML = ""; 
+
+        fila.forEach(processa);   
+        //console.log(fila);
+      }
+
+      function processa(element, index, array){
+        // Buscar elemento pai
+        var elemento_pai = document.getElementById("filaHTML");        
+
+        // Criar elemento
+        var titulo = document.createElement('h5');
+
+        // Criar o nó de texto
+        var elemento = element.slice(0, 4) + " " + element.slice(4);
+
+        var texto = document.createTextNode(elemento);
+
+        // Anexar o nó de texto ao elemento h1
+        titulo.appendChild(texto);
+
+        // Agora sim, inserir (anexar) o elemento filho (titulo) ao elemento pai (body)
+        elemento_pai.appendChild(titulo);
+      
       }
 
     </script>
