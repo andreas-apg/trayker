@@ -147,19 +147,21 @@
 
         $('#atendendoHTML').html(dado.atendendo);
 
-        if (dado.mesa1.peso > 315){
+        if ((dado.mesa1.pronta) && (dado.mesa1.peso > 315)) {
           document.getElementById("mesa-1-div").style.backgroundColor = "rgba(236, 14, 14, 0.47)"; 
-        }else{
+        } else {
           document.getElementById("mesa-1-div").style.backgroundColor = "whitesmoke";  
         }
-        if (dado.mesa2.peso > 315){
+
+        if ((dado.mesa2.pronta) && (dado.mesa2.peso > 315)) {
           document.getElementById("mesa-2-div").style.backgroundColor = "rgba(236, 14, 14, 0.47)"; 
-        }else{
+        } else {
           document.getElementById("mesa-2-div").style.backgroundColor = "whitesmoke"; 
         }
-        if (dado.mesa3.peso > 315){
+
+        if ((dado.mesa3.pronta) && (dado.mesa3.peso > 315)) {
           document.getElementById("mesa-3-div").style.backgroundColor = "rgba(236, 14, 14, 0.3)";         
-        }else{
+        } else {
           document.getElementById("mesa-3-div").style.backgroundColor = "whitesmoke";           
         }
 
