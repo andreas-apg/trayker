@@ -1,5 +1,5 @@
 // Programa Principal - Traykson
-// V8.0 -
+// V9.0 -
 // Giovane e Douglas
 // 05/2019
 
@@ -10,6 +10,8 @@
 #include <PID_v1.h>
 
 boolean comPeso;
+int classePeso;
+
 char destino;
 int tentativa;
 
@@ -103,15 +105,24 @@ int vfA, vfB, vfC;
 
 //----------Constantes dos S. Infravermelhos------------------
 // Sensores infra-vermelho
-const int S1_pin = A11;
-const int S2_pin = A12;
-const int S3_pin = A13;
-const int S4_pin = A14;
-const int S5_pin = A15;
+const int S1_pin_frente = A11;
+const int S2_pin_frente = A12;
+const int S3_pin_frente = A13;
+const int S4_pin_frente = A14;
+const int S5_pin_frente = A15;
+
+// Sensores infra-vermelho ré
+const int S1_pin_re = A9;
+const int S2_pin_re = A8;
+const int S3_pin_re = A7;
+const int S4_pin_re = A6;
+const int S5_pin_re = A5;
+
 
 byte mfrc522_uid[10] = {0};
 byte mfrc522_uid_old[10] = {0};
-int S1, S2, S3, S4, S5;
+int S1_frente, S2_frente, S3_frente, S4_frente, S5_frente;
+int S1_re, S2_re, S3_re, S4_re, S5_re;
 int isS1, isS2, isS3, isS4, isS5;
 
 double erroP_esquerda[2][2] =
@@ -233,7 +244,7 @@ void atras(int velA, int velB, int velC) {
   //MA livre
   digitalWrite(IN1A, LOW);
   digitalWrite(IN2A, HIGH);
-  analogWrite(velocidadeA, velA * 0.9);
+  analogWrite(velocidadeA, velA * 0.95);
 
   //MC horario
   digitalWrite(IN1C, LOW);
@@ -264,44 +275,97 @@ void afrente(int velA, int velB, int velC) {
   analogWrite(velocidadeB, (int) velB);
 }
 
+int S1isBlack() {
+  S1_frente = analogRead(S1_pin_frente);
+  return (S1_frente < 200) ? 1 : 0;
+}
+
+int S2isBlack() {
+  S2_frente = analogRead(S2_pin_frente); 
+  return (S2_frente < 200) ? 1 : 0;
+}
+
+int S3isBlack() {
+  S3_frente = analogRead(S3_pin_frente); 
+  return (S3_frente < 200) ? 1 : 0;
+}
+
+int S4isBlack() {
+  S4_frente = analogRead(S4_pin_frente); 
+  return (S4_frente < 200) ? 1 : 0;
+}
+
+int S5isBlack() {
+  S5_frente = analogRead(S5_pin_frente); 
+  return (S5_frente < 200) ? 1 : 0;
+}
+
+
+int S1ReIsBlack() {
+  S1_re = analogRead(S1_pin_re);
+  return (S1_re < 200) ? 1 : 0;
+}
+
+int S2ReIsBlack() {
+  S2_re = analogRead(S2_pin_re); 
+  return (S2_re < 200) ? 1 : 0;
+}
+
+int S3ReIsBlack() {
+  S3_re = analogRead(S3_pin_re); 
+  return (S3_re < 200) ? 1 : 0;
+}
+
+int S4ReIsBlack() {
+  S4_re = analogRead(S4_pin_re); 
+  return (S4_re < 200) ? 1 : 0;
+}
+
+int S5ReIsBlack() {
+  S5_re = analogRead(S5_pin_re); 
+  return (S5_re < 200) ? 1 : 0;
+}
+
+
 void turn_left() {
   int power = 0;
-  if (comPeso) power = 160;
+  if (comPeso) {
+    power = 150 + classePeso * 7;
+  }
   else power = 150;
-
-  S1 = analogRead(S1_pin);
-  while (S1 > 200) {
-    S1 = analogRead(S1_pin);
+  
+  while (!S1isBlack()) {    
     giro_antihorario(power);
   }
 
-  S3 = analogRead(S3_pin);
-  while (S3 > 200) {
-    S3 = analogRead(S3_pin);
+  while (!S3isBlack()) {    
     giro_antihorario(power);
   }
+  
   parada();
+  
   timeold = millis();
   timeold_card = millis();
 }
 
 void turn_right() {
   int power = 0;
-  if (comPeso) power = 160;
+
+  if (comPeso) {
+    power = 150 + classePeso * 7;
+  }
   else power = 150;
-
-  S5 = analogRead(S5_pin);
-  while (S5 > 200) {
-    S5 = analogRead(S5_pin);
+  
+  while (!S5isBlack()) {    
     giro_horario(power);
   }
-
-  S3 = analogRead(S3_pin);
-  while (S3 > 200) {
-    S3 = analogRead(S3_pin);
+  
+  while (!S3isBlack()) {    
     giro_horario(power);
   }
+  
   parada();
+  
   timeold = millis();
   timeold_card = millis();
 }
@@ -334,29 +398,8 @@ void drop (int pwr) {
 
 void seguir_linha_ate_o_fim() {
 
-  S1 = analogRead(S1_pin);
-  S2 = analogRead(S2_pin);
-  S3 = analogRead(S3_pin);
-  S4 = analogRead(S4_pin);
-  S5 = analogRead(S5_pin);
 
-  if (S1 < 200) {
-    isS1 = 1;
-  }
-  if (S2 < 200) {
-    isS2 = 1;
-  }
-  if (S3 < 200) {
-    isS3 = 1;
-  }
-  if (S4 < 200) {
-    isS4 = 1;
-  }
-  if (S5 < 200) {
-    isS5 = 1;
-  }
-
-  while (isS1 || isS2 || isS3 || isS4 || isS5) {
+  while (S1isBlack() || S2isBlack() || S3isBlack() || S4isBlack() || S5isBlack()) {
     seguir_linha();
   }
 
@@ -364,66 +407,25 @@ void seguir_linha_ate_o_fim() {
 }
 
 void seguir_linha() {
-  afrente(vfA, vfB, vfC);
+  //afrente(vfA, vfB, vfC);
 
   // zerar variaveis
   vA = 0;
   vB = 0;
-  vC = 0;
-
-  isS1 = 0;
-  isS2 = 0;
-  isS3 = 0;
-  isS4 = 0;
-  isS5 = 0;
 
   erroP = 0;
 
-  // Ler sensores infravermelho
-  S1 = analogRead(S1_pin); // extrema esquerda
-  S2 = analogRead(S2_pin); // centro esquerda
-  S3 = analogRead(S3_pin); // centro
-  S4 = analogRead(S4_pin);
-  S5 = analogRead(S5_pin);
-
-  // Calcular erro-proporcial
-  if (S1 < 200) {
-    isS1 = 1;
-  }
-  if (S2 < 200) {
-    isS2 = 1;
-  }
-  if (S3 < 200) {
-    isS3 = 1;
-  }
-  if (S4 < 200) {
-    isS4 = 1;
-  }
-  if (S5 < 200) {
-    isS5 = 1;
-  }
-
-  erroP = erroP_esquerda[isS1][isS2] + erroP_direita[isS4][isS5];
+  erroP = erroP_esquerda[S1isBlack()][S2isBlack()] + erroP_direita[S4isBlack()][S5isBlack()];
 
   erroD = erroP - old_erroP;
   old_erroP = erroP;
 
   vA = (1000) - erroP - 0.8 * erroD; // Motor da direita;
   vB = (1000) + erroP + 0.8 * erroD; // Motor da esquerda
-  vC = 0;
-
-  int bagulho;
-  if (comPeso) {
-    bagulho = 1;
-  }
-  else {
-    bagulho = 0;
-  }
 
 
-  vA = vA * velocidadeBase / (1300 - bagulho * 135);
-  vB = vB * velocidadeBase / (1300 - bagulho * 135);
-  vC = vC * velocidadeBase / (1300 - bagulho * 135);
+  vA = vA * velocidadeBase / (1300 - classePeso * 10);
+  vB = vB * velocidadeBase / (1300 - classePeso * 10);
 
   //  Serial.print("ErroP: ");
   //  Serial.print(erroP);
@@ -434,80 +436,36 @@ void seguir_linha() {
 
   if (vA > 255) vA = 255;
   if (vB > 255) vB = 255;
-  if (vC > 255) vC = 255;
 
   if (vA < 0) vA = 0;
   if (vB < 0) vB = 0;
-  if (vC < 0) vC = 0;
 
   vfA = round(vA);
   vfB = round(vB);
-  vfC = round(vC);
-
+  vfC = 0;
   afrente(vfA, vfB, vfC);
 }
 
 
 void seguir_linha_re() {
-  atras(vfA, vfB, vfC);
+  //atras(vfA, vfB, vfC);
 
   // zerar variaveis
   vA = 0;
   vB = 0;
-  vC = 0;
-
-  isS1 = 0;
-  isS2 = 0;
-  isS3 = 0;
-  isS4 = 0;
-  isS5 = 0;
 
   erroP = 0;
 
-  // Ler sensores infravermelho
-  S1 = analogRead(S1_pin); // extrema esquerda
-  S2 = analogRead(S2_pin); // centro esquerda
-  S3 = analogRead(S3_pin); // centro
-  S4 = analogRead(S4_pin);
-  S5 = analogRead(S5_pin);
-
-  // Calcular erro-proporcial
-  if (S1 < 200) {
-    isS1 = 1;
-  }
-  if (S2 < 200) {
-    isS2 = 1;
-  }
-  if (S3 < 200) {
-    isS3 = 1;
-  }
-  if (S4 < 200) {
-    isS4 = 1;
-  }
-  if (S5 < 200) {
-    isS5 = 1;
-  }
-
-  erroP = erroP_esquerda[isS1][isS2] + erroP_direita[isS4][isS5];
+  erroP = erroP_esquerda[S1ReIsBlack()][S2ReIsBlack()] + erroP_direita[S4ReIsBlack()][S5ReIsBlack()];
 
   erroD = erroP - old_erroP;
   old_erroP = erroP;
 
   vA = (1000) + erroP + 0.8 * erroD; // Motor da direita;
   vB = (1000) - erroP - 0.8 * erroD; // Motor da esquerda
-  vC = 0;
 
-  int bagulho;
-  if (comPeso) {
-    bagulho = 1;
-  }
-  else {
-    bagulho = 0;
-  }
-
-  vA = vA * velocidadeBase / (1300 - bagulho * 135);
-  vB = vB * velocidadeBase / (1300 - bagulho * 135);
-  vC = vC * velocidadeBase / (1300 - bagulho * 135);
+  vA = vA * velocidadeBase / (1300 - classePeso * 10);
+  vB = vB * velocidadeBase / (1300 - classePeso * 10);
 
   //  Serial.print("ErroP: ");
   //  Serial.print(erroP);
@@ -518,16 +476,14 @@ void seguir_linha_re() {
 
   if (vA > 255) vA = 255;
   if (vB > 255) vB = 255;
-  if (vC > 255) vC = 255;
 
   if (vA < 0) vA = 0;
   if (vB < 0) vB = 0;
-  if (vC < 0) vC = 0;
+
 
   vfA = round(vA);
   vfB = round(vB);
-  vfC = round(vC);
-
+  vfC = 0;
   atras(vfA, vfB, vfC);
 }
 
@@ -535,34 +491,34 @@ void recolher_bandeja() {
   seguir_linha_ate_o_fim();
   parada();
   delay(1000);
-  if (check_card(tray)) {
+  if (temCartao(tray)) {
     // if (true) {
-    lift(240);
+    lift(250);
     comPeso = true;
     Serial.print('S');
     play_tone(NOTE_C5);
-    while (!(testeRFID(mfrc522_uid, cards[meio1]) || testeRFID(mfrc522_uid, cards[meio2]) || testeRFID(mfrc522_uid, cards[meio3]))
+    while (!(IDsIguais(mfrc522_uid, cards[meio1]) || IDsIguais(mfrc522_uid, cards[meio2]) || IDsIguais(mfrc522_uid, cards[meio3]))
            &&
-           (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
-      check_card(cross);
+           (!(IDsIguais(mfrc522_uid, cards[cruz1]) || IDsIguais(mfrc522_uid, cards[cruz2]) || IDsIguais(mfrc522_uid, cards[cruz3])))) {
+      temCartao(cross);
       seguir_linha_re();
     }
     parada();
-    turn_right();
+    turn_left();
     drop(80);
     tentativa = 0;
     objetivo = 1;
   } else {
-    while (!(testeRFID(mfrc522_uid, cards[meio1]) || testeRFID(mfrc522_uid, cards[meio2]) || testeRFID(mfrc522_uid, cards[meio3]))
+    while (!(IDsIguais(mfrc522_uid, cards[meio1]) || IDsIguais(mfrc522_uid, cards[meio2]) || IDsIguais(mfrc522_uid, cards[meio3]))
            &&
-           (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
-      check_card(cross);
+           (!(IDsIguais(mfrc522_uid, cards[cruz1]) || IDsIguais(mfrc522_uid, cards[cruz2]) || IDsIguais(mfrc522_uid, cards[cruz3])))) {
+      temCartao(cross);
       seguir_linha_re();
     }
 
     if (tentativa < 1) {
-      while (!(testeRFID(mfrc522_uid, cards[mesa1]) || testeRFID(mfrc522_uid, cards[mesa2]) || testeRFID(mfrc522_uid, cards[mesa3]))) {
-        check_card(cross);
+      while (!(IDsIguais(mfrc522_uid, cards[mesa1]) || IDsIguais(mfrc522_uid, cards[mesa2]) || IDsIguais(mfrc522_uid, cards[mesa3]))) {
+        temCartao(cross);
         seguir_linha();
       }
       // parada();
@@ -570,6 +526,7 @@ void recolher_bandeja() {
       recolher_bandeja();
     } else {
       Serial.print('N');
+      classePeso = 0;
       tentativa = 0;
       turn_right();
       objetivo = 1;
@@ -578,7 +535,7 @@ void recolher_bandeja() {
   }
 }
 
-int testeRFID(byte * rfid_1, byte * rfid_2) {
+int IDsIguais(byte * rfid_1, byte * rfid_2) {
   if (
     rfid_1[0] == rfid_2[0] &&
     rfid_1[1] == rfid_2[1] &&
@@ -594,9 +551,9 @@ int testeRFID(byte * rfid_1, byte * rfid_2) {
 void aproximar() {
   char cancelar = ' ';
   while (objetivo == 0) {
-    if (check_card(cross) && !testeRFID(mfrc522_uid, mfrc522_uid_old)) {
+    if (temCartao(cross) && !IDsIguais(mfrc522_uid, mfrc522_uid_old)) {
       livre();
-      if (testeRFID(mfrc522_uid, cards[meio1]) || testeRFID(mfrc522_uid, cards[meio2]) || testeRFID(mfrc522_uid, cards[meio3])) {
+      if (IDsIguais(mfrc522_uid, cards[meio1]) || IDsIguais(mfrc522_uid, cards[meio2]) || IDsIguais(mfrc522_uid, cards[meio3])) {
         if (objetivo == 0) {
           parada();
           Serial.print('A');
@@ -614,16 +571,29 @@ void aproximar() {
           if (cancelar == '0') {
             Serial.print('0');
             objetivo = 1;
-            turn_right();
-            while (!check_card(cross)
+            turn_left();
+            while (!temCartao(cross)
                    ||
-                   (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
+                   (!(IDsIguais(mfrc522_uid, cards[cruz1]) || IDsIguais(mfrc522_uid, cards[cruz2]) || IDsIguais(mfrc522_uid, cards[cruz3])))) {
               seguir_linha();
             }
             turn_left();
           } else if (cancelar == 'B') {
+            classePeso = 3;
             play_tone(NOTE_E3);
             Serial.print('B');
+          } else if (cancelar == 'H') {
+            classePeso = 3;
+            play_tone(NOTE_E3);
+            Serial.print('H');
+          } else if (cancelar == 'M') {
+            classePeso = 2;
+            play_tone(NOTE_E3);
+            Serial.print('M');
+          } else if (cancelar == 'L') {
+            classePeso = 1;
+            play_tone(NOTE_E3);
+            Serial.print('L');
           } else {
             while (1) {
               play_tone(NOTE_E3);
@@ -637,12 +607,12 @@ void aproximar() {
         } else {
           Serial.print('X');
         }
-      } else if (testeRFID(mfrc522_uid, cards[mesa1]) || testeRFID(mfrc522_uid, cards[mesa2]) || testeRFID(mfrc522_uid, cards[mesa3])) {
+      } else if (IDsIguais(mfrc522_uid, cards[mesa1]) || IDsIguais(mfrc522_uid, cards[mesa2]) || IDsIguais(mfrc522_uid, cards[mesa3])) {
         if (objetivo == 0) {
           recolher_bandeja();
-          while (!check_card(cross)
+          while (!temCartao(cross)
                  ||
-                 (!(testeRFID(mfrc522_uid, cards[cruz1]) || testeRFID(mfrc522_uid, cards[cruz2]) || testeRFID(mfrc522_uid, cards[cruz3])))) {
+                 (!(IDsIguais(mfrc522_uid, cards[cruz1]) || IDsIguais(mfrc522_uid, cards[cruz2]) || IDsIguais(mfrc522_uid, cards[cruz3])))) {
             seguir_linha();
           }
           turn_left();
@@ -730,7 +700,7 @@ void play_tone(int tom) {
     Argumento "reader": sensor que se deseja ler {cross, tray}
     Retorno: void
 */
-int check_card(uint8_t reader) {
+int temCartao(uint8_t reader) {
 
   time_elaps_card = millis() - timeold_card;
 
@@ -744,7 +714,7 @@ int check_card(uint8_t reader) {
       // Show some details of the PICC (that is: the tag/card)
       // Serial.print(F(": Card UID: "));
 
-      if (!testeRFID(mfrc522_uid, mfrc522_uid_old)) {
+      if (!IDsIguais(mfrc522_uid, mfrc522_uid_old)) {
         mfrc522_uid_old[0] = mfrc522_uid[0];
         mfrc522_uid_old[1] = mfrc522_uid[1];
         mfrc522_uid_old[2] = mfrc522_uid[2];
@@ -853,6 +823,7 @@ void setup()
   time_elaps = 0;
 
   comPeso = false;
+  classePeso = 0;
   tentativa = 0;
   velocidadeBase = 265;
 
@@ -875,11 +846,18 @@ void setup()
   pinMode(swt_top, INPUT_PULLUP);
 
   //------Configuração Infravermelho--------------------------
-  pinMode(S1_pin, INPUT);
-  pinMode(S2_pin, INPUT);
-  pinMode(S3_pin, INPUT);
-  pinMode(S4_pin, INPUT);
-  pinMode(S5_pin, INPUT);
+  pinMode(S1_pin_frente, INPUT);
+  pinMode(S2_pin_frente, INPUT);
+  pinMode(S3_pin_frente, INPUT);
+  pinMode(S4_pin_frente, INPUT);
+  pinMode(S5_pin_frente, INPUT);
+
+  //------Configuração Infravermelho Ré-----------------------
+  pinMode(S1_pin_re, INPUT);
+  pinMode(S2_pin_re, INPUT);
+  pinMode(S3_pin_re, INPUT);
+  pinMode(S4_pin_re, INPUT);
+  pinMode(S5_pin_re, INPUT);
 
   //--------Configuracao PID--------------------------
 
@@ -914,7 +892,7 @@ void setup()
     drop(80);
   }
 
-  while (!check_card(tray));
+  while (!temCartao(tray));
 }
 
 //-----------------------------------------MAIN---------------------------------------------
@@ -942,12 +920,10 @@ void loop() {
     Serial.print(destino); // Ecoa o dado lido para confirmar recebimento
 
     livre();
-    switch (destino) {
-      case '0':
-        break;
+    switch (destino) {      
 
       case '1':
-        while (!check_card(cross) || !testeRFID(mfrc522_uid, cards[cruz1])) {
+        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz1])) {
           seguir_linha();
         }
         turn_right();
@@ -955,7 +931,7 @@ void loop() {
         break;
 
       case '2':
-        while (!check_card(cross) || !testeRFID(mfrc522_uid, cards[cruz2])) {
+        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz2])) {
           seguir_linha();
         }
         turn_right();
@@ -963,7 +939,7 @@ void loop() {
         break;
 
       case '3':
-        while (!check_card(cross) || !testeRFID(mfrc522_uid, cards[cruz3])) {
+        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz3])) {
           seguir_linha();
         }
         turn_right();
@@ -974,7 +950,7 @@ void loop() {
         break;
     }
 
-    while ((!check_card(cross) || !testeRFID(mfrc522_uid, cards[cozinha]))) {
+    while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha]))) {
       seguir_linha();
     }
 
@@ -990,12 +966,13 @@ void loop() {
 
     turn_left();
     comPeso = false;
+    classePeso = 0;
     objetivo = 0;
     //Serial.print('K');
   }
 
   if (destino == 'T') {
-    while ((!check_card(cross) || !testeRFID(mfrc522_uid, cards[cozinha])));
+    while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha])));
     Serial.print('K');
   }
 }
