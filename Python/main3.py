@@ -45,14 +45,14 @@ def on_message(client, userdata, msg):
     distancia = float(msg[2])
     RFID = msg[3]
     peso = float(msg[4])
-    print('{}: Pronta: {}, Distancia: {:03.0f} cm, RFID: {}, Peso: {:04.0f} g'.format(mesa, pronta, distancia, RFID, peso))
+    #print('{}: Pronta: {}, Distancia: {:03.0f} cm, RFID: {}, Peso: {:04.0f} g'.format(mesa, pronta, distancia, RFID, peso))
     global pronta_array
     global peso_array
     global distancia_array
     global anterior_array
     global rfid_array
     global updated_array
-    print('Mensagem de: {}'.format(mesa))
+    #print('Mensagem de: {}'.format(mesa))
     #print('distancia_array')
     distancia_array[int(mesa[4])] = distancia
     #print('rfid_array')
@@ -67,9 +67,9 @@ def on_message(client, userdata, msg):
     # Pronta tem que ser 0 ou 1 para ter seu valor atribuido na base.
     if(int(pronta) < 2):
         pronta_array[int(mesa[4])] = pronta
-        print('Pronta = {}. Dados vieram da funcao de estado.'.format(pronta))
-    else:
-        print('Pronta = {}. Dados vieram da funcao de leitura.'.format(pronta))
+        #print('Pronta = {}. Dados vieram da funcao de estado.'.format(pronta))
+    #else:
+        #print('Pronta = {}. Dados vieram da funcao de leitura.'.format(pronta))
     #print('updated_array')
     updated_array[int(mesa[4])] = 1
     #print('agendando')
@@ -135,6 +135,7 @@ def agendamento():
             elif(fila.presente('MESA{}'.format(i)) == True):
                 print('Fila: Removendo mesa {}'.format(i))
                 fila.remove('MESA{}'.format(i))
+                pronta_array[i] = '0'
                 print(fila.get_fila())
 
     #if(pronta_array[1] != anterior_array[1]):
@@ -197,7 +198,13 @@ def read_blue():
         print("Valor lido no bluetooth: {0}".format(mesa_num))
         print('pronta_array[{0}]: {1}'.format(mesa_num, pronta_array[int(mesa_num)]))
         if (pronta_array[int(mesa_num)] == '1'):
-            bs.write(b'B') # confirma
+            # confirmacoes de leve, medio e pesado
+            if(int(peso_array[int(mesa_num)]) < 100):
+                bs.write(b'L')
+            if(int(peso_array[int(mesa_num)]) in range(100, 200)):
+                bs.write(b'M')
+            if(int(peso_array[int(mesa_num)]) in range(201, 316)):
+                bs.write(b'H')
             confirma = bs.read()
             print('Recebido: {}'.format(confirma))
             if(confirma == b'B'):

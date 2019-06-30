@@ -75,7 +75,8 @@ def on_message(client, userdata, msg):
     #print('agendando')
     agendamento()
 
-def mqtt_thread():
+def mqtt_th
+read():
     client = mqtt.Client(clean_session=True)
     client.on_connect = on_connect
     client.on_message = on_message
@@ -135,6 +136,7 @@ def agendamento():
             elif(fila.presente('MESA{}'.format(i)) == True):
                 print('Fila: Removendo mesa {}'.format(i))
                 fila.remove('MESA{}'.format(i))
+                pronta_array[i] = '0'
                 print(fila.get_fila())
 
     #if(pronta_array[1] != anterior_array[1]):
@@ -197,7 +199,13 @@ def read_blue():
         print("Valor lido no bluetooth: {0}".format(mesa_num))
         print('pronta_array[{0}]: {1}'.format(mesa_num, pronta_array[int(mesa_num)]))
         if (pronta_array[int(mesa_num)] == '1'):
-            bs.write(b'B') # confirma
+            # confirmacoes de leve, medio e pesado
+            if(int(peso_array[int(mesa_num)]) < 100):
+                bs.write(b'L')
+            if(int(peso_array[int(mesa_num)]) in range(100, 200)):
+                bs.write(b'M')
+            if(int(peso_array[int(mesa_num)]) in range(201, 316)):
+                bs.write(b'H')
             confirma = bs.read()
             print('Recebido: {}'.format(confirma))
             if(confirma == b'B'):
