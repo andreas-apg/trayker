@@ -1,7 +1,7 @@
 // Programa Principal - Traykson
-// V9.0 -
+// V10.0 -
 // Giovane e Douglas
-// 05/2019
+// 06/2019
 
 
 #include <SPI.h>
@@ -14,6 +14,7 @@ int classePeso;
 
 char destino;
 int tentativa;
+int objetivo; // 0 = cozinha, 1 = mesa
 
 //--------Constantes SRFID--------------------------------------
 
@@ -40,37 +41,16 @@ enum rfid_sensors : uint8_t {cross, tray} srfid;
 
 const int BUZ = 45;
 
-//----------Constantes PID------------------------
-//Define Variables we'll be connecting to
-double SetpointC, InputC, OutputC;
-double SetpointB, InputB, OutputB;
-
-//Specify the links and initial tuning parameters
-double Kp = 0.4, Ki = 0.3, Kd = 0.01;
-PID myPID_C(&InputC, &OutputC, &SetpointC, Kp, Ki, Kd, DIRECT);
-PID myPID_B(&InputB, &OutputB, &SetpointB, Kp, Ki, Kd, DIRECT);
-
-
 
 //---------Constantes dos Encoders-----------------------------
 
-int pino_D0 = 20;
-int pino_D1 = 21;
-float rpmC;
-float rpmB;
-volatile int pulsosC;
-volatile int pulsosB;
+
 unsigned long timeold, timeold_card;
 unsigned long time_elaps, time_elaps_card;
-
-const float pulsos_por_volta = 24;
 
 //tempo que recolhemos a amostra  de pulsos p/ calcular velocidade
 const unsigned int time_sample = 200;
 const unsigned int time_sample_card = 500;
-
-//constante de conversao de pulsos para rmp
-const float rpm_const = (double)(60.0 * 1000.0) / (double) (pulsos_por_volta*time_sample);
 
 //---------Constantes dos Motores------------------------------
 
@@ -119,11 +99,8 @@ const int S4_pin_re = A6;
 const int S5_pin_re = A5;
 
 
-byte mfrc522_uid[10] = {0};
-byte mfrc522_uid_old[10] = {0};
 int S1_frente, S2_frente, S3_frente, S4_frente, S5_frente;
 int S1_re, S2_re, S3_re, S4_re, S5_re;
-int isS1, isS2, isS3, isS4, isS5;
 
 // Matriz de erros para sensores de linha frontal
 double erroP_esquerda[2][2] =
@@ -152,6 +129,10 @@ double erroP, old_erroP, erroD, erroI;
 
 //----------- Cartoes RFID ------------------------------------
 
+byte mfrc522_uid[10] = {0};
+byte mfrc522_uid_old[10] = {0};
+
+
 byte cards[][4] = {
   {0xCA, 0x0A, 0xDB, 0x2B}, // cruz1
   {132, 194, 65, 30}, // cruz2
@@ -165,25 +146,6 @@ byte cards[][4] = {
   {131, 80, 140, 46}
 }; // cozinha
 enum card_tags : uint8_t {cruz1, cruz2, cruz3, meio1, meio2, meio3, mesa1, mesa2, mesa3, cozinha};
-
-// 0 = cozinha, 1 = mesa
-int objetivo;
-
-
-//-------- Funções de Tratamento de Interrupcao dos Encoders---------------------------------
-void contadorC()
-{
-  //Incrementa contador
-  pulsosC++;
-}
-
-void contadorB()
-{
-  //Incrementa contador
-  pulsosB++;
-}
-
-void drop (int pwr);
 
 
 //---------------------------------Configuracoes---------------------------------------------
@@ -254,7 +216,7 @@ void giro_antihorario(int vel) {
 
 
 void atras(int velA, int velB, int velC) {
-  //MA livre
+  //MA Reverso
   digitalWrite(IN1A, LOW);
   digitalWrite(IN2A, HIGH);
   analogWrite(velocidadeA, velA * 0.95);
@@ -305,22 +267,22 @@ int S1isBlack() {
 }
 
 int S2isBlack() {
-  S2_frente = analogRead(S2_pin_frente); 
+  S2_frente = analogRead(S2_pin_frente);
   return (S2_frente < 200) ? 1 : 0;
 }
 
 int S3isBlack() {
-  S3_frente = analogRead(S3_pin_frente); 
+  S3_frente = analogRead(S3_pin_frente);
   return (S3_frente < 200) ? 1 : 0;
 }
 
 int S4isBlack() {
-  S4_frente = analogRead(S4_pin_frente); 
+  S4_frente = analogRead(S4_pin_frente);
   return (S4_frente < 200) ? 1 : 0;
 }
 
 int S5isBlack() {
-  S5_frente = analogRead(S5_pin_frente); 
+  S5_frente = analogRead(S5_pin_frente);
   return (S5_frente < 200) ? 1 : 0;
 }
 
@@ -331,22 +293,22 @@ int S1ReIsBlack() {
 }
 
 int S2ReIsBlack() {
-  S2_re = analogRead(S2_pin_re); 
+  S2_re = analogRead(S2_pin_re);
   return (S2_re < 200) ? 1 : 0;
 }
 
 int S3ReIsBlack() {
-  S3_re = analogRead(S3_pin_re); 
+  S3_re = analogRead(S3_pin_re);
   return (S3_re < 200) ? 1 : 0;
 }
 
 int S4ReIsBlack() {
-  S4_re = analogRead(S4_pin_re); 
+  S4_re = analogRead(S4_pin_re);
   return (S4_re < 200) ? 1 : 0;
 }
 
 int S5ReIsBlack() {
-  S5_re = analogRead(S5_pin_re); 
+  S5_re = analogRead(S5_pin_re);
   return (S5_re < 200) ? 1 : 0;
 }
 
@@ -357,17 +319,17 @@ void turn_left() {
     power = 150 + classePeso * 7;
   }
   else power = 150;
-  
-  while (!S1isBlack()) {    
+
+  while (!S1isBlack()) {
     giro_antihorario(power);
   }
 
-  while (!S3isBlack()) {    
+  while (!S3isBlack()) {
     giro_antihorario(power);
   }
-  
+
   parada();
-  
+
   timeold = millis();
   timeold_card = millis();
 }
@@ -379,17 +341,17 @@ void turn_right() {
     power = 150 + classePeso * 7;
   }
   else power = 150;
-  
-  while (!S5isBlack()) {    
+
+  while (!S5isBlack()) {
     giro_horario(power);
   }
-  
-  while (!S3isBlack()) {    
+
+  while (!S3isBlack()) {
     giro_horario(power);
   }
-  
+
   parada();
-  
+
   timeold = millis();
   timeold_card = millis();
 }
@@ -488,19 +450,19 @@ void seguir_linha_re() {
 
   vA = (1000) + erroP + 0.8 * erroD; // Motor da direita;
   vB = (1000) - erroP - 0.8 * erroD; // Motor da esquerda
-  
+
   vA = vA * velocidadeBase / (1300 - classePeso * 10);
   vB = vB * velocidadeBase / (1300 - classePeso * 10);
 
   double baseC;
-  if(erroP < 0)  baseC = -80.0;
-  if(erroP == 0) baseC = 0.0;
-  if(erroP > 0)  baseC = 80.0;
+  if (erroP < 0)  baseC = -80.0;
+  if (erroP == 0) baseC = 0.0;
+  if (erroP > 0)  baseC = 80.0;
   vC = (erroP / 20.0 + baseC) + (0.8 * erroD);
 
   if (vA > 255) vA = 255;
   if (vB > 255) vB = 255;
-  
+
   if (vA < 0) vA = 0;
   if (vB < 0) vB = 0;
 
@@ -572,7 +534,7 @@ int IDsIguais(byte * rfid_1, byte * rfid_2) {
 }
 
 void aproximar() {
-  char cancelar = ' ';
+
   while (objetivo == 0) {
     if (temCartao(cross) && !IDsIguais(mfrc522_uid, mfrc522_uid_old)) {
       livre();
@@ -590,6 +552,7 @@ void aproximar() {
           Serial.print(destino);
           while (!Serial.available());
 
+          char cancelar;
           cancelar = Serial.read();
           if (cancelar == '0') {
             Serial.print('0');
@@ -624,10 +587,9 @@ void aproximar() {
             }
           }
 
-        } else if (objetivo == 1) {
-          Serial.print('W');
-          turn_left();
-        } else {
+        } 
+        
+        else {
           Serial.print('X');
         }
       } else if (IDsIguais(mfrc522_uid, cards[mesa1]) || IDsIguais(mfrc522_uid, cards[mesa2]) || IDsIguais(mfrc522_uid, cards[mesa3])) {
@@ -644,68 +606,13 @@ void aproximar() {
         }
       }
 
-    } else {      
+    } //fim do if (temCartao() && ehNovoCartao())
+
+    else {
       seguir_linha();
-      
     }
-  }
-}
 
-
-/***************************************Funcao Check Encoders**********************
-    Verifica quantos pulsos foram registrados, calcula e imprime a RPM de cada roda (B e C)
-*/
-void check_encoders()
-{
-
-  time_elaps = millis() - timeold;
-
-  if (time_elaps >= time_sample)
-  {
-    //Desabilita interrupcao durante o calculo
-    detachInterrupt(digitalPinToInterrupt(pino_D0));
-    detachInterrupt(digitalPinToInterrupt(pino_D1));
-
-
-    rpmC = rpm_const * pulsosC;
-    rpmB = rpm_const * pulsosB;
-
-    InputC = rpmC;
-    InputB = rpmB;
-
-    int SetPoint = 110;
-
-    // Influencia dos infravermelhos sobre a entrada do PID
-    SetpointC = SetPoint + vfC;
-    SetpointB = SetPoint + vfB;
-
-    // computa apenas quando time_elaps >= SetSampleTime() (=200ms)
-    myPID_C.Compute();
-    myPID_B.Compute();
-
-    //Mostra o valor de RPM no serial monitor
-    //    Serial.print("RPM_C = ");
-    //    Serial.print(rpmC, DEC);
-    //    Serial.print("   RPM_B = ");
-    //    Serial.println(rpmB, DEC);
-    //
-    //    Serial.print("OutputC = ");
-    //    Serial.print(OutputC, DEC);
-    //    Serial.print("    OutputB = ");
-    //    Serial.println(OutputB, DEC);
-
-    analogWrite(velocidadeA, (int) OutputC);
-    analogWrite(velocidadeB, (int) OutputB);
-
-
-    pulsosC = 0;
-    pulsosB = 0;
-    timeold = millis();
-
-
-    attachInterrupt(digitalPinToInterrupt(pino_D0), contadorC, FALLING);
-    attachInterrupt(digitalPinToInterrupt(pino_D1), contadorB, FALLING);
-  }
+  } //fim do while
 }
 
 
@@ -733,15 +640,12 @@ int temCartao(uint8_t reader) {
 
   time_elaps_card = millis() - timeold_card;
 
-  if (time_elaps_card >= time_sample_card) {
+  if (time_elaps_card >= time_sample_card) {    
 
     if (mfrc522[reader].PICC_IsNewCardPresent() && mfrc522[reader].PICC_ReadCardSerial()) {
 
       // Serial.print(F("Reader "));
-      // Serial.print(reader);
-
-      // Show some details of the PICC (that is: the tag/card)
-      // Serial.print(F(": Card UID: "));
+      // Serial.print(reader);      
 
       if (!IDsIguais(mfrc522_uid, mfrc522_uid_old)) {
         mfrc522_uid_old[0] = mfrc522_uid[0];
@@ -750,6 +654,10 @@ int temCartao(uint8_t reader) {
         mfrc522_uid_old[3] = mfrc522_uid[3];
       }
 
+
+      // Show some details of the PICC (that is: the tag/card)
+      //Serial.println(F(": Card UID: "));
+      
       if (mfrc522[reader].uid.size == 4)
       {
         dump_byte_array(mfrc522[reader].uid.uidByte, mfrc522[reader].uid.size);
@@ -759,7 +667,6 @@ int temCartao(uint8_t reader) {
         mfrc522_uid[3] = mfrc522[reader].uid.uidByte[3];
       }
 
-      // Serial.println();
 
       // Halt PICC
       mfrc522[reader].PICC_HaltA();
@@ -804,7 +711,18 @@ void dump_byte_array(byte * buffer, byte bufferSize) {
 
   }
 
-  // Serial.print(output);
+  //Serial.print(output);
+}
+
+void aguardarRetiradaDeBandeja()
+{
+  while (digitalRead(swt_top) == HIGH) {
+    play_tone();
+    delay(1000);
+  }
+
+  play_tone(330);
+  delay(2000);
 }
 
 void setup()
@@ -834,22 +752,8 @@ void setup()
   }
 
   delay(250);
-  //--------Configuracao Encoders----------------------
-  //Pino do sensor como entrada
-  pinMode(pino_D0, INPUT);
-  pinMode(pino_D1, INPUT);
 
-  //Aciona o contador a cada pulso
-  attachInterrupt(digitalPinToInterrupt(pino_D0), contadorC, FALLING);
-  attachInterrupt(digitalPinToInterrupt(pino_D1), contadorB, FALLING);
-
-  //Variaveis
-  pulsosC = 0;
-  pulsosB = 0;
-  rpmB = 0;
-  rpmC = 0;
-  timeold = 0;
-  time_elaps = 0;
+  // -------Outras Variaveis -------------------
 
   comPeso = false;
   classePeso = 0;
@@ -890,25 +794,6 @@ void setup()
 
   //--------Configuracao PID--------------------------
 
-  //initialize the variables we're linked to
-  InputC = rpmC;
-  SetpointC = 125;
-  myPID_C.SetOutputLimits(95, 250);
-
-  InputB = rpmB;
-  SetpointB = 125;
-  myPID_B.SetOutputLimits(95, 250);
-
-  //turn the PID on
-  myPID_C.SetMode(AUTOMATIC);
-  myPID_B.SetMode(AUTOMATIC);
-
-  digitalWrite(IN3B, HIGH);
-  digitalWrite(IN4B, LOW);
-  digitalWrite(IN1C, LOW);
-  digitalWrite(IN2C, HIGH);
-  //analogWrite(velocidadeC, (int) 100);
-
   old_erroP = 0;
   erroI = 0;
   erroD = 0;
@@ -937,68 +822,59 @@ void loop() {
 
   // Recebe comando via bluetooth informando em qual lugar buscar a bandeja
   // destino:
-  // 0 = cozinha
-  // 1 = lugar 1
-  // 2 = lugar 2 etc.
+  // 1 = mesa 1
+  // 2 = mesa 2 etc.
   destino = Serial.read(); // Lê 1 byte da porta serial
 
-  if (destino != '0' && destino != 'T') {
-    Serial.print(destino); // Ecoa o dado lido para confirmar recebimento
+  Serial.print(destino); // Ecoa o dado lido para confirmar recebimento
 
-    livre();
-    switch (destino) {      
 
-      case '1':
-        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz1])) {
-          seguir_linha();
-        }
-        turn_right();
-        aproximar();
-        break;
 
-      case '2':
-        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz2])) {
-          seguir_linha();
-        }
-        turn_right();
-        aproximar();
-        break;
+  switch (destino) {
 
-      case '3':
-        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz3])) {
-          seguir_linha();
-        }
-        turn_right();
-        aproximar();
-        break;
-
-      default:
-        break;
-    }
-
-    while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha]))) {
-      seguir_linha();
-    }
-
-    livre();
-    if (comPeso) {
-      while (digitalRead(swt_top) == HIGH) {
-        play_tone();
-        delay(500);
+    case '1':
+      while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz1])) {
+        seguir_linha();
       }
-      play_tone(330);
-      delay(2000);
-    }
+      turn_right();
+      aproximar();
+      break;
 
-    turn_left();
-    comPeso = false;
-    classePeso = 0;
-    objetivo = 0;
-    Serial.print('K');
+    case '2':
+      while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz2])) {
+        seguir_linha();
+      }
+      turn_right();
+      aproximar();
+      break;
+
+    case '3':
+      while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz3])) {
+        seguir_linha();
+      }
+      turn_right();
+      aproximar();
+      break;
+
+    default:
+      break;
   }
 
-  if (destino == 'T') {
-    while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha])));
-    Serial.print('K');
+  while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha]))) {
+    seguir_linha();
   }
+  
+  livre();
+
+  if (comPeso) {
+    aguardarRetiradaDeBandeja();
+  }
+
+  turn_left();
+  livre();
+
+  comPeso = false;
+  classePeso = 0;
+  objetivo = 0;
+  delay(7000);
 }
