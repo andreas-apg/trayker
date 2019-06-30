@@ -491,14 +491,12 @@ void seguir_linha_re() {
   
   vA = vA * velocidadeBase / (1300 - classePeso * 10);
   vB = vB * velocidadeBase / (1300 - classePeso * 10);
-  vC = (erroP) / 4.0;
 
-  //  Serial.print("ErroP: ");
-  //  Serial.print(erroP);
-  //  Serial.print(" :: ");
-  //  Serial.print(vA);
-    Serial.print(" :: ");
-    Serial.println(vC);
+  double baseC;
+  if(erroP < 0)  baseC = -80.0;
+  if(erroP == 0) baseC = 0.0;
+  if(erroP > 0)  baseC = 80.0;
+  vC = (erroP / 20.0 + baseC) + (0.8 * erroD);
 
   if (vA > 255) vA = 255;
   if (vB > 255) vB = 255;
@@ -610,15 +608,15 @@ void aproximar() {
           } else if (cancelar == 'H') {
             classePeso = 3;
             play_tone(NOTE_E3);
-            Serial.print('H');
+            Serial.print('B');
           } else if (cancelar == 'M') {
             classePeso = 2;
             play_tone(NOTE_E3);
-            Serial.print('M');
+            Serial.print('B');
           } else if (cancelar == 'L') {
             classePeso = 1;
             play_tone(NOTE_E3);
-            Serial.print('L');
+            Serial.print('B');
           } else {
             while (1) {
               play_tone(NOTE_E3);
@@ -718,6 +716,12 @@ void play_tone() {
 
 void play_tone(int tom) {
   tone(BUZ, tom, 300);
+}
+
+void play_long_tone() {
+  for (int i = 0; i < 30; i++) {
+    tone(BUZ, random(30, 2000), 10);
+  }
 }
 
 /*************************Funcao Check Card*******************************
@@ -917,10 +921,84 @@ void setup()
     drop(80);
   }
 
-  // while (!temCartao(tray));
+  while (!temCartao(tray));
 }
 
 //-----------------------------------------MAIN---------------------------------------------
 void loop() {
-  seguir_linha_re();
+
+  // Envia para a base que o robô está na cozinha
+  Serial.print('K');
+
+  // Aguarda comando da base via bluetooth
+  while (!Serial.available()) { // verifica se existem bytes a serem lidos da porta serial
+    // nada
+  }
+
+  // Recebe comando via bluetooth informando em qual lugar buscar a bandeja
+  // destino:
+  // 0 = cozinha
+  // 1 = lugar 1
+  // 2 = lugar 2 etc.
+  destino = Serial.read(); // Lê 1 byte da porta serial
+
+  if (destino != '0' && destino != 'T') {
+    Serial.print(destino); // Ecoa o dado lido para confirmar recebimento
+
+    livre();
+    switch (destino) {      
+
+      case '1':
+        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz1])) {
+          seguir_linha();
+        }
+        turn_right();
+        aproximar();
+        break;
+
+      case '2':
+        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz2])) {
+          seguir_linha();
+        }
+        turn_right();
+        aproximar();
+        break;
+
+      case '3':
+        while (!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cruz3])) {
+          seguir_linha();
+        }
+        turn_right();
+        aproximar();
+        break;
+
+      default:
+        break;
+    }
+
+    while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha]))) {
+      seguir_linha();
+    }
+
+    livre();
+    if (comPeso) {
+      while (digitalRead(swt_top) == HIGH) {
+        play_tone();
+        delay(500);
+      }
+      play_tone(330);
+      delay(2000);
+    }
+
+    turn_left();
+    comPeso = false;
+    classePeso = 0;
+    objetivo = 0;
+    Serial.print('K');
+  }
+
+  if (destino == 'T') {
+    while ((!temCartao(cross) || !IDsIguais(mfrc522_uid, cards[cozinha])));
+    Serial.print('K');
+  }
 }
