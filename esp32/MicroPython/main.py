@@ -13,8 +13,8 @@ from machine import reset
 
 #MQTT
 SERVER = '10.3.141.1'  # MQTT Server Address (Change to the IP address of your Pi)
-CLIENT_ID = 'MESA2'
-TOPIC = b'mesa2'
+CLIENT_ID = 'MESA1'
+TOPIC = b'mesa1'
 
 client = MQTTClient(CLIENT_ID, SERVER)
 
@@ -108,6 +108,7 @@ def waiting():
         try:
             for i in range (0, 10):
                 anterior = pronta
+                confirma = 0
                 pronta = waiting_check()
                 print('Pronta: {}\nEsperando... {}'.format(pronta, i))
                 # se apertou o botao, precisa avisar
@@ -122,11 +123,13 @@ def waiting():
                 # contar de novo
                 if(anterior != pronta):
                     break
+                if(i == 9):
+                    confirma = 1
                 sleep(1)
             # se passou 10 segundos dentro de um mesmo estado,
             # manda pra base o estado
             print('Esperou {} segundos.'.format(i))
-            if (i == 9):
+            if (confirma == 1):
                 print('Mandando pra base:')
                 msg = (b'{0}|{1}|{2:3}|{3:3}|{4:3}'.format(CLIENT_ID, pronta, distancia, str(rfid),peso))
                 client.publish(TOPIC, msg)

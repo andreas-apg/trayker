@@ -22,6 +22,7 @@ try:
 except OSError as er:
     print('Falha ao conectar o Bluetooth')
 
+num_mesas = 3
 pronta_array =       ['0', '0', '0', '0']
 peso_array =         ['0', '0', '0', '0']
 distancia_array =    ['0', '0', '0', '0']
@@ -44,14 +45,14 @@ def on_message(client, userdata, msg):
     distancia = float(msg[2])
     RFID = msg[3]
     peso = float(msg[4])
-    print('{}: Pronta: {}, Distancia: {:03.0f} cm, RFID: {}, Peso: {:04.0f} g'.format(mesa, pronta, distancia, RFID, peso))
+    #print('{}: Pronta: {}, Distancia: {:03.0f} cm, RFID: {}, Peso: {:04.0f} g'.format(mesa, pronta, distancia, RFID, peso))
     global pronta_array
     global peso_array
     global distancia_array
     global anterior_array
     global rfid_array
     global updated_array
-    print('Mensagem de: {}'.format(mesa))
+    #print('Mensagem de: {}'.format(mesa))
     #print('distancia_array')
     distancia_array[int(mesa[4])] = distancia
     #print('rfid_array')
@@ -61,7 +62,14 @@ def on_message(client, userdata, msg):
     #print('anterior_array')
     anterior_array[int(mesa[4])] = pronta_array[int(mesa[4])]
     #print('pronta_array')
-    pronta_array[int(mesa[4])] = pronta
+    # se pronta valer 2, quer dizer que veio da funcao que coleta os dados.
+    # pronta = 1 e pronta = 0 so podem vir da funcao de espera de estado.
+    # Pronta tem que ser 0 ou 1 para ter seu valor atribuido na base.
+    if(int(pronta) < 2):
+        pronta_array[int(mesa[4])] = pronta
+        #print('Pronta = {}. Dados vieram da funcao de estado.'.format(pronta))
+    #else:
+        #print('Pronta = {}. Dados vieram da funcao de leitura.'.format(pronta))
     #print('updated_array')
     updated_array[int(mesa[4])] = 1
     #print('agendando')
@@ -117,33 +125,46 @@ def agendamento():
     global fila
     global pronta_array
     global anterior_array
-    if(pronta_array[1] != anterior_array[1]):
-        if(pronta_array[1] == '1' and atendendo != 'MESA1' and fila.presente('MESA1') == False):
-            print('Fila: Inserindo mesa 1')
-            fila.insere('MESA1')
-            print(fila.get_fila())
-        elif(fila.presente('MESA1') == True):
-            print('Fila: Removendo mesa 1')
-            fila.remove('MESA1')
-            print(fila.get_fila())
-    if(pronta_array[2] != anterior_array[2]):
-        if(pronta_array[2] == '1' and atendendo != 'MESA2' and fila.presente('MESA2') == False):
-            print('Fila: Inserindo mesa 2')
-            fila.insere('MESA2')
-            print(fila.get_fila())
-        elif(fila.presente('MESA2') == True):
-            print('Fila: Removendo mesa 2')
-            fila.remove('MESA2')
-            print(fila.get_fila())
-    if(pronta_array[3] != anterior_array[3] and atendendo != 'MESA3' and fila.presente('MESA3') == False):
-        if(pronta_array[3] == '1'):
-            print('Fila: Inserindo mesa 3')
-            fila.insere('MESA3')
-            print(fila.get_fila())
-        elif(fila.presente('MESA3') == True):
-            print('Removendo mesa 3')
-            fila.remove('MESA3')
-            print(fila.get_fila())
+    global num_mesas
+    for i in range(1, num_mesas+1):
+        if(pronta_array[i] != anterior_array[i]):
+            if(pronta_array[i] == '1' and atendendo != ('MESA{}'.format(i)) and fila.presente('MESA{}'.format(i)) == False):
+                print('Fila: Inserindo mesa {}'.format(i))
+                fila.insere('MESA{}'.format(i))
+                print(fila.get_fila())
+            elif(fila.presente('MESA{}'.format(i)) == True):
+                print('Fila: Removendo mesa {}'.format(i))
+                fila.remove('MESA{}'.format(i))
+                pronta_array[i] = '0'
+                print(fila.get_fila())
+
+    #if(pronta_array[1] != anterior_array[1]):
+    #    if(pronta_array[1] == '1' and atendendo != 'MESA1' and fila.presente('MESA1') == False):
+    #        print('Fila: Inserindo mesa 1')
+    #        fila.insere('MESA1')
+    #        print(fila.get_fila())
+    #    elif(fila.presente('MESA1') == True):
+    #        print('Fila: Removendo mesa 1')
+    #        fila.remove('MESA1')
+    #        print(fila.get_fila())
+    #if(pronta_array[2] != anterior_array[2]):
+    #    if(pronta_array[2] == '1' and atendendo != 'MESA2' and fila.presente('MESA2') == False):
+    #        print('Fila: Inserindo mesa 2')
+    #        fila.insere('MESA2')
+    #        print(fila.get_fila())
+    #    elif(fila.presente('MESA2') == True):
+    #        print('Fila: Removendo mesa 2')
+    #        fila.remove('MESA2')
+    #        print(fila.get_fila())
+    #if(pronta_array[3] != anterior_array[3] and atendendo != 'MESA3' and fila.presente('MESA3') == False):
+    #    if(pronta_array[3] == '1'):
+    #        print('Fila: Inserindo mesa 3')
+    #        fila.insere('MESA3')
+    #        print(fila.get_fila())
+    #    elif(fila.presente('MESA3') == True):
+    #        print('Removendo mesa 3')
+    #        fila.remove('MESA3')
+    #        print(fila.get_fila())
 
 # funcao utilizada para determinar quando uma mesa esta sem
 # atualizar ha muito tempo
@@ -177,7 +198,15 @@ def read_blue():
         print("Valor lido no bluetooth: {0}".format(mesa_num))
         print('pronta_array[{0}]: {1}'.format(mesa_num, pronta_array[int(mesa_num)]))
         if (pronta_array[int(mesa_num)] == '1'):
-            bs.write(b'B') # confirma
+            # confirmacoes de leve, medio e pesado
+            if(int(peso_array[int(mesa_num)]) < 100):
+                bs.write(b'L')
+            elif(int(peso_array[int(mesa_num)]) in range(100, 200)):
+                bs.write(b'M')
+            elif(int(peso_array[int(mesa_num)]) in range(201, 316)):
+                bs.write(b'H')
+            else:
+                bs.write(b'0')
             confirma = bs.read()
             print('Recebido: {}'.format(confirma))
             if(confirma == b'B'):
@@ -222,6 +251,7 @@ def main():
         else:
             read_blue()
 
+sleep(5)
 _thread.start_new_thread(mesa_ociosa, ())
 _thread.start_new_thread(mqtt_thread, ())
 _thread.start_new_thread(main, ())
