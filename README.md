@@ -1,21 +1,19 @@
 # **Project Trayker**
 
-Code files for a system that automatically collects trays from empty seats in a restaurant like setting. The project is divided in three main parts: the *Tables*, the *Base* and the *Robot*.
+Código para um sistema automatizado de coleta de bandejas para restaurantes e lanchonetes. O sistema é dividido em cinco partes: mesas e bandejas adaptadas, um robô coletor, uma interface web que demonstra em tempo real o estado do robô e mesa e uma estação base, responsável pelo processamento entre as demais partes. [Este vídeo](https://www.youtube.com/watch?v=8xj9Teuq3to) apresenta o sistema em ação.
 
-## **Table**
+## **Mesas**
 
-![Schematic of the Table](/imagens/Mesa_parte.png?raw=true)
+Tendo um [ESP32 da Espressif](https://www.espressif.com/en/products/hardware/esp32/resources) como microcontrolador principal, o código da mesa foi desenvolvido em MicroPython. Ela é responsável por processar dados coletados de diversos sensores e então determinar se a mesa possui uma bandeja abandonada pronta para coleta. Comunicação sem fio com a base é realizada através do protocolo [MQTT](https://mqtt.org/).
 
-The tables consist of multiple sensors connected to an [ESP32 microcontroller](https://www.espressif.com/en/products/hardware/esp32/resources). Coded in MicroPython, the data gathered is processed and sent to the Base wirelessly, using [MQTT](https://mqtt.org/).
+## **Robô Coletor**
 
-## **Base**
+Possui um [Arduino Mega 2560](https://store.arduino.cc/usa/mega-2560-r3) como microcontroador. Programado em C++, é responsável por guiar o robô até o destino determinado pela estação base, utilizando de um algoritmo seguidor de linha. A comunicação sem fio com a base é realizada através do protocolo Bluetooth.
 
-![Schematic of the Base](/imagens/Base_parte.png?raw=true)
+## **Interface Web**
 
-The base consist of a single Raspberry Pi running Debian. Coded in Python3, the data received from the tables is used to create a task queue of which tables have trays to be picked up. This information is then sent to the Robot through [Bluetooth](https://www.bluetooth.com/).
+Hospedada pela estação base, rodando em um servidor web criado por [Flask](http://flask.pocoo.org/) em Python. Apresenta informações em tempo real da leitura dos sensores das mesas, qual mesa o robô está atendendo e a fila de coleta de mesas que já estão prontas para coleta. Seus códigos integram HTML, CSS e Javascript.
 
-## **Robot**
+## **Estação Base**
 
-![Schematic of the Base](/imagens/Robo_parte.png?raw=true)
-
-An Arduino Mega is used to control a three wheeled omni-direcional robot through the restaurant. After receiving a destination from the Base, the robot proceeds to pick up unless the task is cancelled, at which case it returns to its starting position before attending the next item in the task queue.
+Programada em Python, as funcionalidades integradas de Bluetooth e WiFi de uma [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) foram utilizadas para se comunicar com as mesas e o robô.
