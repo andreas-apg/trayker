@@ -29,13 +29,14 @@ Programada em Python, as funcionalidades integradas de Bluetooth e WiFi de uma [
 ## **Códigos**
 Todos os códigos estão disponibilizados na página do GitHub no branch "final"
 
-## **Equipe**
+## **Projeto Trayker**
 
 **UTFPR- Campus Curitiba**  
 **Engenharia da Computação**  
 **Oficinas de Integração 3**  
 **2019.1**
 
+#### Equipe:
 
 Andreas Gomes  
 Douglas Vicente  
