@@ -1,2 +1,0 @@
-#!/bin/bash
-rshell --buffer-size=30 -p /dev/ttyUSB0
