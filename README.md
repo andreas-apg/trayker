@@ -36,8 +36,7 @@ Todos os códigos estão disponibilizados na página do GitHub no branch "final"
 **Oficinas de Integração 3**  
 **2019.1**
 
-#### Equipe:
-
+**Equipe:**  
 Andreas Gomes  
 Douglas Vicente  
 Everson de Souza  
