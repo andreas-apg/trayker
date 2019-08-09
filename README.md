@@ -7,23 +7,7 @@ O Trayker é um protótipo para automatizar a de coleta de bandejas em restauran
 O sistema é dividido em cinco partes: mesas e bandejas adaptadas, um robô coletor, uma interface web que demonstra em tempo real o estado do robô e mesa e uma estação base, responsável pelo processamento entre as demais partes. O vídeo abaixo apresenta uma demonstração do sistema.  
 
 
-<iframe width="500" height="300" src="https://www.youtube-nocookie.com/embed/D-C6KesHGfw?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## **Equipe**
-
-**UTFPR- Campus Curitiba**  
-**Engenharia da Computação**  
-**Oficinas de Integração 3**  
-**2019.1**
-
-
-Andreas Gomes  
-Douglas Vicente  
-Everson de Souza  
-Henrique Batochi  
-Giovane Negrini
-
-
+<style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/embed/D-C6KesHGfw' frameborder='0' allowfullscreen></iframe></div>
 
 
 ## **Mesas**
@@ -44,3 +28,18 @@ Programada em Python, as funcionalidades integradas de Bluetooth e WiFi de uma [
 
 ## **Códigos**
 Todos os códigos estão disponibilizados na página do GitHub no branch "final"
+
+## **Equipe**
+
+**UTFPR- Campus Curitiba**  
+**Engenharia da Computação**  
+**Oficinas de Integração 3**  
+**2019.1**
+
+
+Andreas Gomes  
+Douglas Vicente  
+Everson de Souza  
+Henrique Batochi  
+Giovane Negrini
+
